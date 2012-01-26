@@ -116,14 +116,6 @@
     </xsd:complexType>
 
     <xsd:simpleType name="ipVersion">
-        <xsd:annotation>
-            <xsd:appinfo>
-                <jaxb:typesafeEnumClass>
-                    <jaxb:typesafeEnumMember value="IPV4" name="IPV4"/>
-                    <jaxb:typesafeEnumMember value="IPV6" name="IPV6"/>
-                </jaxb:typesafeEnumClass>
-            </xsd:appinfo>
-        </xsd:annotation>
         <xsd:restriction base="xsd:string">
             <xsd:enumeration value="IPV4"/>
             <xsd:enumeration value="IPV6"/>
