@@ -44,6 +44,33 @@
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
+                <artifactId>xml-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>transform</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <transformationSets>
+                        <transformationSet>
+                            <dir>${basedir}/src/main/resources/META-INF/xsd</dir>
+                            <stylesheet>${basedir}/src/main/resources/META-INF/xslt/xsd.vc.xsl</stylesheet>
+                            <outputDir>target/generated-resources/resources/META-INF/xsd</outputDir>
+                            <parameters>
+                                <parameter>
+                                    <name>vc.Version</name>
+                                    <value>1.0</value>
+                                </parameter>
+                            </parameters>
+                        </transformationSet>
+                    </transformationSets>
+              </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
                 <artifactId>jaxb2-maven-plugin</artifactId>
                 <version>1.3</version>
                 <dependencies>
@@ -65,14 +92,17 @@
                         <configuration>
                             <staleFile>target/raxApi.staleFile</staleFile>
                             <extension>true</extension>
+                            <!--
                             <schemaDirectory>
                                 ${basedir}/src/main/resources/META-INF/xsd
-                            </schemaDirectory>
+                            </schemaDirectory>-->
+                            <schemaDirectory>target/generated-resources/resources/META-INF/xsd</schemaDirectory>
                             <clearOutputDir>false</clearOutputDir>
                             <schemaFiles>RaxApi.xsd</schemaFiles>
                             <packageName>org.openstack.atlas.api.v1.extensions.rax</packageName>
-                            <!--<arguments>-Xcollection-setter-injector</arguments>-->
                             <arguments>-Xxew -setters</arguments>
+                            <!--<arguments>-Xcollection-setter-injector</arguments>-->
+                            <!--<bindingDirectory>target/generated-resources/resources/META-INF/xsd</bindingDirectory>-->
                             <bindingDirectory>../../../core-data-model/src/main/resources/META-INF/xsd</bindingDirectory>
                             <bindingFiles>CoreApiBindings.xjb</bindingFiles>
                         </configuration>

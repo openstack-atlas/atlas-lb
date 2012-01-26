@@ -3,7 +3,7 @@ package org.openstack.atlas.rax.api.mapper.dozer.converter;
 import org.junit.Assert;
 import org.junit.Test;
 import org.openstack.atlas.api.v1.extensions.rax.AccessList;
-import org.openstack.atlas.api.v1.extensions.rax.IpVersion;
+import org.openstack.atlas.core.api.v1.IpVersion;
 import org.openstack.atlas.api.v1.extensions.rax.NetworkItemType;
 import org.openstack.atlas.core.api.v1.LoadBalancer;
 import org.xml.sax.SAXException;

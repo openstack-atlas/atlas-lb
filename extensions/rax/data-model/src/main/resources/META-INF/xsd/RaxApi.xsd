@@ -1,66 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema elementFormDefault="qualified"
-            targetNamespace="http://docs.openstack.org/atlas/api/v1.1/extensions/rax"
-            xmlns:tns="http://docs.openstack.org/atlas/api/v1.1/extensions/rax"
+            targetNamespace="http://docs.openstack.org/atlas/api/v1.1"
+            xmlns:tns="http://docs.openstack.org/atlas/api/v1.1"
             xmlns:core="http://docs.openstack.org/atlas/api/v1.1"
+            xmlns:rax="http://docs.openstack.org/atlas/api/v1.1/extensions/rax"            
             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
             jaxb:version="2.1"
+            xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
             xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
             jaxb:extensionBindingPrefixes="xjc">
 
-    <xsd:import schemaLocation="../../../../../../../../core-data-model/src/main/resources/META-INF/xsd/CoreApi.xsd"
-                namespace="http://docs.openstack.org/atlas/api/v1.1"/>
+    
+    <xsd:import schemaLocation="RaxTypes.xsd"
+                namespace="http://docs.openstack.org/atlas/api/v1.1/extensions/rax"/>
 
-    <!--ACCESS LIST EXTENSIONS-->
-    <xsd:element name="accessList" type="tns:accessList"/>
-    <xsd:complexType name="accessList">
-        <xsd:sequence>
-            <xsd:element name="networkItem" type="tns:networkItem" minOccurs="0" maxOccurs="unbounded"/>
-        </xsd:sequence>
-    </xsd:complexType>
+    <xsd:include vc:minVersion="1.0" vc:maxVersion="1.1"
+             schemaLocation="../../../../../../../../core-data-model/src/main/resources/META-INF/xsd/CoreApi.xsd"/>
 
-    <xsd:element name="networkItem" type="tns:networkItem"/>
-    <xsd:complexType name="networkItem">
-        <xsd:attribute name="id" type="xsd:int"/>
-        <xsd:attribute name="address" type="xsd:string"/>
-        <xsd:attribute name="ipVersion" type="core:ipVersion"/>
-        <xsd:attribute name="type" type="tns:networkItemType"/>
-    </xsd:complexType>
-
-    <xsd:simpleType name="networkItemType">
-        <xsd:restriction base="xsd:string">
-            <xsd:enumeration value="ALLOW"/>
-            <xsd:enumeration value="DENY"/>
-        </xsd:restriction>
-    </xsd:simpleType>
-
-    <xsd:element name="errorPage" type="tns:errorPage"/>
-    <xsd:complexType name="errorPage">
-        <xsd:sequence>
-            <xsd:element name="content" type="xsd:string"/>
-        </xsd:sequence>
-    </xsd:complexType>
-
-    <!--CONNECTION THROTTLE EXTENSIONS-->
-    <xsd:attribute name="minRequests" type="xsd:int"/>
-    <xsd:attribute name="maxRequests" type="xsd:int"/>
-
-    <!--HEALTH MONITOR EXTENSIONS-->
-    <xsd:attribute name="statusRegex" type="xsd:string"/>
-    <xsd:attribute name="bodyRegex" type="xsd:string"/>
-
-    <!--USAGE EXTENSIONS-->
-    <xsd:attribute name="averageNumConnections" type="xsd:decimal"/>
-    <xsd:attribute name="numVips" type="xsd:int"/>
-    <xsd:attribute name="numPolls" type="xsd:int"/>
-
-    <!--TODO: DELETE AFTER PROOF OF CONCEPT COMPLETED-->
-    <xsd:attribute name="crazyName" type="xsd:string"/>
-
-    <xsd:element name="connectionLogging" type="tns:connectionLogging"/>
-    <xsd:complexType name="connectionLogging">
-        <xsd:attribute name="enabled" type="xsd:boolean"/>
-    </xsd:complexType>
+    
+    <xsd:redefine vc:minVersion="1.1" schemaLocation="../../../../../../../../core-data-model/src/main/resources/META-INF/xsd/CoreApi.xsd">
+        <xsd:complexType name="loadBalancer">
+            <xsd:complexContent>
+                <xsd:extension base="core:loadBalancer">
+                    <xsd:sequence>
+                        <xsd:element ref="rax:accessList" use="optional"/>
+                    </xsd:sequence>
+                    <xsd:attribute ref="rax:crazyName"/>            
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>                                                                        
+    </xsd:redefine>
+    
 
 </xsd:schema>

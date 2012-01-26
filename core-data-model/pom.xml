@@ -61,6 +61,8 @@
                             <schemaFiles>CoreApi.xsd</schemaFiles>
                             <packageName>org.openstack.atlas.core.api.v1</packageName>
                             <arguments>-Xxew -setters</arguments>
+                            <bindingDirectory>src/main/resources/META-INF/xsd</bindingDirectory>
+                            <bindingFiles>IpVersionBinding.xjb</bindingFiles>
                         </configuration>
                         <goals>
                             <goal>xjc</goal>
