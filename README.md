@@ -1,42 +1,67 @@
-Requirements
-------------
-  Java >= 1.5
-  Apache Maven == 2.2.1 (Use the 'settings.xml' file located in the contrib/maven directory)
-  Apache ActiveMQ == 5.5.0
-  Glassfish >= 3.1
-  MySql >= 5.x
+### What is Atlas
+-------------
+Atlas is the Openstack LoadBalancers API that is actively being developed.
+
+### Wiki
+--------
+http://wiki.openstack.org/Atlas-LB
+
+### Requirements
+----------------
+1. Java >= 1.5
+
+2. Apache Maven == 2.2.1
+
+3. Apache ActiveMQ == 5.5.0
+
+    Run ActiveMQ on default port.
+
+    `java -jar activemq/bin/run.jar start`
+
+4. MySQL >= 5.x
+
+    Create a MySQL database named 'openstack_atlas'
+
+5. Glassfish == 3.0.1 (Optional as Atlas comes with an embedded jetty server)
 
 
-Getting Started
----------------
-  1) Create a MySql database called 'loadbalancing'
+### Getting Started for development
+-----------------------------------
+1. Build
 
-  2) Follow the steps in article below to create a mysql data-source in the Glassfish application server. This is the
-     data-source used by the application to connect to the database:
+    Grab this [settings.xml](/rackspace/atlas-lb/core-api/core-public-web/src/deb/contrib/maven) and put it inside your
+    ~/.m2 directory:
 
-       http://www.albeesonline.com/blog/2008/08/06/creating-and-configuring-a-mysql-datasource-in-glassfish-application-server/
+    `cd atlas-lb`
 
-       i)  For step 1 of that article, download and apply the latest version of Mysql JDBC driver ie. 5.0.8 version
-       ii) For step 17 of that article, name the jndi name as 'jdbc/atlasCoreDB'
+    `mvn clean install`
 
-  3) Create a directory named '/etc/openstack/atlas' and copy over all of the files in the contrib/etc/openstack/atlas
-     directory.
+2. Configure
 
-  4) Run 'mvn clean install' to build artifacts
+    Copy all of the configuration files from [/rackspace/atlas-lb/core-api/core-public-web/src/deb/contrib/etc/openstack/atlas](/rackspace/atlas-lb/core-api/core-public-web/src/deb/contrib/etc/openstack/atlas)
+    and put it under your /etc/openstack/atlas directory. Make sure you update /etc/openstack/atlas/public-api.conf with your database username/password.
 
-  5) Start ActiveMQ on default port
-  
-  6) Deploy the core-public-web-x.y.z-SNAPSHOT.war located in the core-api/core-public-web/target directory to
-     Glassfish, choosing '/v1.1' as the context root
+3. Start atlas:
 
-  7) Seed the 'loadbalancing' database with fake data (cluster, hosts, virtual ips, etc.) provided in the file
-     'core-seed.sql' located in the contrib/db/ directory
+    `java -jar server/target/exe-core-public-web-1.1.0-SNAPSHOT.jar start`
 
-  8) Now you can access the Atlas REST API via http://<hostname>:8080/v1.1/<tenant_id>/<resource>
+4. If atlas is properly started, it should have created the necessary database tables for you. Seed the 'openstack_atlas'
+    database with some fake data (cluster, hosts, virtual ips, etc.). A sample for testing is here: [core-seed.sql](/rackspace/atlas-lb/core-api/core-public-web/src/deb/contrib/db/) directory
+
+Now you can access the Atlas REST API eg. do a GET on [http://localhost:8080/v1.1/1000/loadbalancers](http://localhost:8080/v1.1/1000/loadbalancers)
+where 1000 is a tenant_id. What does it return? May be its time to do a POST. More more operations, [http://wiki.openstack.org/Atlas-LB](http://wiki.openstack.org/Atlas-LB)
 
 
-  For more information please visit the following:
+### Deploy under Glassfish Application Server
+---------------------------------------------
 
-    http://wiki.openstack.org/Atlas-LB (API Documentation)
-    https://launchpad.net/atlas-lb (Process Management)
-    http://openstack.org/ (Openstack)
+Alternative to the step 3 above, if you want to use an Application Server like Glassfish instead of the embedded jetty, you could:
+
+    /glassfish/glassfish/bin/asadmin start-domain
+
+    cp atlas-lb/core-api/core-public-web/target/core-public-web-1.1.0-SNAPSHOT.war /glassfish/glassfish/domains/domain1/autodeploy
+
+
+
+For more information about Openstack, go to [Openstack.org](http://openstack.org)
+
