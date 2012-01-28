@@ -59,7 +59,7 @@ public class AtlasServer {
 
             WebAppContext context = new WebAppContext();
             context.setServer(server);
-            context.setContextPath("/");
+            context.setContextPath("/v1.1");
 
             ProtectionDomain protectionDomain = AtlasServer.class.getProtectionDomain();
             URL location = protectionDomain.getCodeSource().getLocation();
