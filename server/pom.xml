@@ -12,7 +12,7 @@
     <artifactId>server</artifactId>
 
     <properties>
-        <bundle.name>exe-core-public-web-${project.version}</bundle.name>
+        <bundle.name>atlas-${project.version}</bundle.name>
         <jetty.version>7.2.2.v20101205</jetty.version>
     </properties>
 
