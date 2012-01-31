@@ -1,0 +1,29 @@
+1.  Fork Atlas-lb
+Go to https://github.com/rackspace/atlas-lb and fork the project to your account.
+
+2. Clone the repo to your machine
+git clone git@github.com:youraccount/atlas-lb.git
+
+3. Add remote repository as upstream
+cd atlas-lb
+git remote add upstream git@github.com:rackspace/atlas-lb.git
+
+4. Create a branch from master
+git checkout -b myfeature master
+git push origin myfeature
+
+5. Make changes and push to your branch
+git add <newfile>
+git commit -m "Adding a few file for testing the process."
+git push origin myfeature
+
+5. Repeat 5 Until your feature is complete.
+
+6. Refresh your branch
+git fetch upstream
+git checkout master
+git rebase upstream/master
+git checkout myfeature
+git push origin master
+
+7. Issue a pull request from youraccount/atlas-lb:master to rackspace/atlas-lb:master
