@@ -13,6 +13,7 @@
         <class>org.openstack.atlas.service.domain.entity.ConnectionThrottle</class>
         <class>org.openstack.atlas.service.domain.entity.HealthMonitor</class>
         <class>org.openstack.atlas.service.domain.entity.Host</class>
+        <class>org.openstack.atlas.service.domain.entity.HostStatus</class>
         <class>org.openstack.atlas.service.domain.entity.LimitType</class>
         <class>org.openstack.atlas.service.domain.entity.LoadBalancer</class>
         <class>org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip</class>

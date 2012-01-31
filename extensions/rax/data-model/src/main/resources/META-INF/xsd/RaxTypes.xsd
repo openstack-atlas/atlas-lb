@@ -70,4 +70,40 @@
         <xsd:attribute name="enabled" type="xsd:boolean"/>
     </xsd:complexType>
 
+    <!-- Management Extensions -->
+    <xsd:element name="hosts" type="tns:hosts"/>
+    <xsd:complexType name="hosts">
+        <xsd:sequence>
+            <xsd:element name="host" type="tns:host" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="sticky" type="xsd:boolean"/>
+    </xsd:complexType>
+
+    <xsd:element name="host" type="tns:host"/>
+    <xsd:complexType name="host">
+        <xsd:attribute name="id" type="xsd:int"/>
+        <xsd:attribute name="name" type="xsd:string"/>
+        <xsd:attribute name="clusterId" type="xsd:int"/>
+        <xsd:attribute name="coreDeviceId" type="xsd:string"/>
+        <xsd:attribute name="status" type="tns:hostStatus"/>
+        <xsd:attribute name="endpoint" type="xsd:string" />
+        <xsd:attribute name="endpointActive" type="xsd:boolean"/>
+        <xsd:attribute name="ipv4Servicenet" type="xsd:string"/>
+        <xsd:attribute name="ipv6Servicenet" type="xsd:string"/>
+        <xsd:attribute name="ipv4Public" type="xsd:string"/>
+        <xsd:attribute name="ipv6Public" type="xsd:string"/>
+        <xsd:attribute name="username" type="xsd:string" />
+        <xsd:attribute name="password" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:simpleType name="hostStatus">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="ACTIVE_TARGET"/>
+            <xsd:enumeration value="OFFLINE"/>
+            <xsd:enumeration value="BURN_IN"/>
+            <xsd:enumeration value="ACTIVE"/>
+            <xsd:enumeration value="FAILOVER"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
 </xsd:schema>

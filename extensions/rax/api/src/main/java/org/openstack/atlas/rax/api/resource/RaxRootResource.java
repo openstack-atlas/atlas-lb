@@ -13,8 +13,16 @@ public class RaxRootResource extends RootResource {
     @Autowired
     private RaxClustersResource raxClustersResource;
 
+    @Autowired
+    private RaxHostsResource raxHostsResource;
+
     @Path("clusters")
     public RaxClustersResource retrieveClustersResource() {
         return raxClustersResource;
+    }
+
+    @Path("hosts")
+    public RaxHostsResource retrieveHostsResource() {
+        return raxHostsResource;
     }
 }
