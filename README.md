@@ -34,7 +34,7 @@ http://wiki.openstack.org/Atlas-LB
 
     `cd atlas-lb`
 
-    `mvn clean install`
+    `./bin/build.sh`
 
 2. Configure
 
@@ -43,11 +43,11 @@ http://wiki.openstack.org/Atlas-LB
 
 3. Start atlas:
 
-    `java -jar server/target/atlas-1.1.0-SNAPSHOT.jar start`
+    `./bin/run.sh`
 
     To run the app into debug mode on port 8080 with embedded jetty:
 
-    `java -agentlib:jdwp=transport=dt_socket,server=y,address=8080,suspend=n -jar server/target/atlas-1.1.0-SNAPSHOT.jar start`
+    `./bin/debug.sh`
 
 4. If atlas is properly started, it should have created the necessary database tables for you. Seed the 'openstack_atlas'
     database with some fake data (cluster, hosts, virtual ips, etc.). A sample for testing is here: atlas-lb/core-api/core-public-web/src/deb/contrib/db/ directory
