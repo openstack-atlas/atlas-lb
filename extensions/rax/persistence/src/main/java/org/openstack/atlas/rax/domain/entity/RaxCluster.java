@@ -1,16 +1,15 @@
 package org.openstack.atlas.rax.domain.entity;
 
+import org.openstack.atlas.service.domain.entity.Cluster;
 import org.openstack.atlas.service.domain.entity.Host;
 
 import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;
 import java.io.Serializable;
 
 @javax.persistence.Entity
 @DiscriminatorValue(Discriminator.RAX)
-public class RaxHost extends Host implements Serializable {
+public class RaxCluster extends Cluster implements Serializable {
     private final static long serialVersionUID = 532512316L;
 
     @Column
@@ -22,16 +21,5 @@ public class RaxHost extends Host implements Serializable {
 
     public void setFoo(String foo) {
         this.foo = foo;
-    }
-
-    @Column(name = "core_device_id", nullable = false)
-    private String coreDeviceId;
-
-    public String getCoreDeviceId() {
-        return coreDeviceId;
-    }
-
-    public void setCoreDeviceId(String coreDeviceId) {
-        this.coreDeviceId = coreDeviceId;
     }
 }

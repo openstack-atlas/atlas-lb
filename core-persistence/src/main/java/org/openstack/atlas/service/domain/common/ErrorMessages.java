@@ -11,6 +11,9 @@ public enum ErrorMessages {
     ACCESSLIST_NOT_FOUND("Access List not found."),
     NETWORK_ITEM_NOT_FOUND("Network Item {0} not found."),
 
+    CLUSTER_NOT_FOUND("Cluster {0} not found."),
+    HOST_ALREADY_EXISTS("A host with the management IP address already exists."),
+
     LB_NOT_FOUND("Load balancer not found."),
     LB_DELETED("The load balancer is deleted and considered immutable."),
     LB_IMMUTABLE("Load Balancer {0} has a status of {1} and is considered immutable."),

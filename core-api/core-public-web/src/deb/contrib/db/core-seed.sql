@@ -53,3 +53,13 @@ INSERT INTO `limit_type` VALUES ('CORE', 'IPV6_LIMIT',25,'Max number of IPv6 add
 INSERT INTO `limit_type` VALUES ('CORE', 'BATCH_DELETE_LIMIT',10,'Max number of items that can be deleted for batch delete operations');
 /*!40000 ALTER TABLE `limit_type` ENABLE KEYS */;
 UNLOCK TABLES;
+
+LOCK TABLES `limit_type` WRITE;
+CREATE TABLE `host_status` (`name` varchar(32) NOT NULL,`description` varchar(128) NOT NULL,PRIMARY KEY  (`name`)) ;
+insert into host_status(name, description) values("ACTIVE", "Indicates that the host is in the active status");
+insert into host_status(name, description) values("ACTIVE_TARGET", "Indicates that the host is in the active target status");
+insert into host_status(name, description) values("BURN_IN", "Indicates that the host is in the burn-in status");
+insert into host_status(name, description) values("FAILOVER", "Indicates that the host is in the failover status");
+insert into host_status(name, description) values("OFFLINE", "Indicates that the host is in the offline status");
+UNLOCK TABLES;
+
