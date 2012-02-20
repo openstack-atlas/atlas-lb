@@ -184,10 +184,12 @@ public class ReverseProxyLoadBalancerServiceImpl implements ReverseProxyLoadBala
         }
     }
 
-
     protected LoadBalancerEndpointConfiguration getConfigbyLoadBalancerId(Integer lbId) throws EntityNotFoundException, DecryptException, MalformedURLException {
         org.openstack.atlas.service.domain.entity.LoadBalancer loadBalancer = loadBalancerRepository.getById(lbId);
-        Host host = loadBalancer.getHost();
+        return getConfigbyHost(loadBalancer.getHost());
+    }
+
+    protected LoadBalancerEndpointConfiguration getConfigbyHost(Host host) throws EntityNotFoundException, DecryptException, MalformedURLException {
         Cluster cluster = host.getCluster();
         Host endpointHost = hostRepository.getEndPointHost(cluster.getId());
         List<String> failoverHosts = hostRepository.getFailoverHostNames(cluster.getId());
