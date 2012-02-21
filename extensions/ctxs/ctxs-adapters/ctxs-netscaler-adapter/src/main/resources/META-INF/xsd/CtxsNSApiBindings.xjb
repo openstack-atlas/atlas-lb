@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bindings version="2.1" xmlns="http://java.sun.com/xml/ns/jaxb">
+
+    <bindings scd="x-schema::tns" xmlns:tns="http://docs.citrix.com/cloud/netscaler/loadbalancers/api/v1.1/extensions">
+        <schemaBindings map="true"/>
+
+
+    </bindings>
+</bindings>
+

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified"
+            targetNamespace="http://docs.openstack.org/atlas/api/v1.1/extensions/ctxs"
+            xmlns:tns="http://docs.openstack.org/atlas/api/v1.1/extensions/ctxs"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+            jaxb:version="2.1"
+            xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+            jaxb:extensionBindingPrefixes="xjc">
+
+    <xsd:attribute name="sslMode" type="xsd:string" />
+
+    <xsd:element name="certificates" type="tns:CertificatesDef"/>
+
+    <xsd:complexType name="CertificatesDef">
+        <xsd:sequence>
+            <xsd:element name="certificate" minOccurs="1" maxOccurs="unbounded" type="tns:certificateDef"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:element name="certificate" type="tns:certificateDef"/>
+
+    <xsd:complexType name="certificateDef">
+        <xsd:sequence>
+            <xsd:element name="certificatecontent" type="xsd:string" minOccurs="1"/>
+            <xsd:element name="keycontent" type="xsd:string" minOccurs="1"/>
+            <xsd:element name="linkcertificates" type="tns:linkCertificatesDef" minOccurs="0"/>
+        </xsd:sequence>
+
+        <xsd:attribute name="id" type="xsd:int"/>
+        <xsd:attribute name="name" type="xsd:string"/>
+        <xsd:attribute name="encoding" type="tns:encodingType"/>
+        <xsd:attribute name="format" type="tns:certformat"/>
+        <xsd:attribute name="status" type="xsd:string"/>
+        <xsd:attribute name="certificatestatus" type="xsd:string"/>
+        <xsd:attribute name="subject" type="xsd:string"/>
+        <xsd:attribute name="Issuer" type="xsd:string"/>
+        <xsd:attribute name="notBefore" type="xsd:string"/>
+        <xsd:attribute name="notAfter" type="xsd:string"/>
+        <xsd:attribute name="version" type="xsd:string"/>
+        <xsd:attribute name="serialVersion" type="xsd:string"/>
+        <xsd:attribute name="signatureAlgorithm" type="xsd:string"/>
+        <xsd:attribute name="publicKeyAlgorithm" type="xsd:string"/>
+        <xsd:attribute name="publicKeySize" type="xsd:string"/>
+    </xsd:complexType>
+
+
+    <xsd:element name="ctxsextensions" type="tns:ctxsextensions"/>
+
+    <xsd:complexType name="ctxsextensions">
+        <xsd:sequence>
+            <xsd:element name="certificates" minOccurs="1" maxOccurs="1" type="tns:certificatesRef">
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+
+
+    <!--certificate is not working out, so using certificateref-->
+    <!--<xsd:element name="certificatesRef" type="tns:certificatesRef"/>-->
+
+    <xsd:complexType name="certificatesRef">
+        <xsd:sequence>
+            <xsd:element name="certificate" minOccurs="1" maxOccurs="unbounded" type="tns:certificateRef">
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="certificateRef">
+        <xsd:attribute name="idRef" type="xsd:int"/>
+    </xsd:complexType>
+
+
+
+    <xsd:simpleType name="certformat">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="PEM"/>
+            <xsd:enumeration value="DER"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="encodingType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="BASE64"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="linkCertificatesDef">
+        <xsd:sequence>
+            <xsd:element name="linkcertificate" minOccurs="1" maxOccurs="unbounded" type="tns:linkCertificateDef"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="linkCertificateDef">
+        <xsd:sequence>
+            <xsd:element name="certificatecontent" type="xsd:string" minOccurs="1"/>
+        </xsd:sequence>
+        <xsd:attribute name="encoding" type="tns:encodingType"/>
+        <xsd:attribute name="format" type="tns:certformat"/>
+    </xsd:complexType>
+
+
+</xsd:schema>

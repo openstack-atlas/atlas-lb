@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings xmlns="http://dozer.sourceforge.net"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://dozer.sourceforge.net
+          http://dozer.sourceforge.net/schema/beanmapping.xsd">
+
+
+    <mapping map-null="false" map-id="ctxs-cert-api-domain-mapping" type="one-way">
+        <class-a>
+            org.openstack.atlas.api.v1.extensions.ctxs.Certificate
+        </class-a>
+        <class-b>
+            org.openstack.atlas.ctxs.service.domain.entity.Certificate
+        </class-b>
+
+        <field custom-converter="org.openstack.atlas.ctxs.api.mapper.dozer.factory.EnumConvertor">
+            <a>format</a>
+            <b>certificateFormat</b>
+        </field>
+        <field custom-converter="org.openstack.atlas.ctxs.api.mapper.dozer.factory.EnumConvertor">
+            <a>encoding</a>
+            <b>certificateEncodingType</b>
+        </field>
+        <field>
+            <a>keycontent</a>
+            <b>kcontent</b>
+        </field>
+        <field>
+            <a>certificatecontent</a>
+            <b>ccontent</b>
+        </field>
+        <field>
+            <a>linkcertificates</a>
+            <b>lcertificates</b>
+        </field>
+    </mapping>
+    <mapping map-null="false" map-id="ctxs-cert-domain-api-mapping" type="one-way">
+        <class-a>
+            org.openstack.atlas.ctxs.service.domain.entity.Certificate
+        </class-a>
+        <class-b>
+            org.openstack.atlas.api.v1.extensions.ctxs.Certificate
+        </class-b>
+
+        <field custom-converter="org.openstack.atlas.ctxs.api.mapper.dozer.factory.EnumConvertor">
+            <a>certificateFormat</a>
+            <b>format</b>
+        </field>
+        <field custom-converter="org.openstack.atlas.ctxs.api.mapper.dozer.factory.EnumConvertor">
+            <a>certificateEncodingType</a>
+            <b>encoding</b>
+        </field>
+    </mapping>
+
+    <mapping map-null="false" type="one-way">
+        <class-a>
+            org.openstack.atlas.api.v1.extensions.ctxs.LinkCertificateDef
+        </class-a>
+        <class-b>
+            org.openstack.atlas.ctxs.service.domain.entity.LinkCertificate
+        </class-b>
+        <field custom-converter="org.openstack.atlas.ctxs.api.mapper.dozer.factory.EnumConvertor">
+            <a>format</a>
+            <b>format</b>
+        </field>
+        <field custom-converter="org.openstack.atlas.ctxs.api.mapper.dozer.factory.EnumConvertor">
+            <a>encoding</a>
+            <b>encoding</b>
+        </field>
+    </mapping>
+
+</mappings>

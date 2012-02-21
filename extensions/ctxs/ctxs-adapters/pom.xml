@@ -4,18 +4,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.openstack.atlas</groupId>
-        <artifactId>atlas-parent</artifactId>
+        <artifactId>atlas-ctxs-parent</artifactId>
         <version>1.1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <name>Openstack :: Atlas :: API :: Extensions</name>
-    <artifactId>extensions</artifactId>
+    <name>Openstack :: Atlas :: Extension :: CTXS :: Adapters :: Parent</name>
+    <artifactId>atlas-ctxs-adapters</artifactId>
     <packaging>pom</packaging>
 
     <modules>
-        <module>rax</module>
-        <module>ctxs</module>
+        <module>ctxs-adapter-common</module>
+        <module>ctxs-netscaler-adapter</module>
     </modules>
 
     <build>
@@ -42,4 +42,12 @@
             </plugins>
         </pluginManagement>
     </build>
+    <dependencies>
+        <!--Dozer Dependencies-->
+        <dependency>
+            <groupId>net.sf.dozer</groupId>
+            <artifactId>dozer</artifactId>
+        </dependency>
+    </dependencies>
+
 </project>
