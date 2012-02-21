@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified"
+            targetNamespace="http://docs.openstack.org/atlas/api/v1.1"
+            xmlns:tns="http://docs.openstack.org/atlas/api/v1.1"
+            xmlns:ctxs="http://docs.openstack.org/atlas/api/v1.1/extensions/ctxs"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+            jaxb:version="2.1"
+            xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+            xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+            jaxb:extensionBindingPrefixes="xjc">
+
+    
+    <xsd:import schemaLocation="CtxsTypes.xsd"
+                namespace="http://docs.openstack.org/atlas/api/v1.1/extensions/ctxs"/>
+
+    <xsd:include vc:minVersion="1.0" vc:maxVersion="1.1"
+             schemaLocation="../../../../../../../../core-data-model/src/main/resources/META-INF/xsd/CoreApi.xsd"/>
+
+    <xsd:redefine vc:minVersion="1.1" schemaLocation="../../../../../../../../core-data-model/src/main/resources/META-INF/xsd/CoreApi.xsd">
+        <xsd:complexType name="loadBalancer">
+            <xsd:complexContent>
+                <xsd:extension base="tns:loadBalancer">
+                    <xsd:sequence>
+                        <xsd:element name="certificatesRef" type="ctxs:certificatesRef" minOccurs="0"/>
+                    </xsd:sequence>
+                    <xsd:attribute ref="ctxs:sslMode"/>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>                                                                        
+    </xsd:redefine>
+    
+
+</xsd:schema>

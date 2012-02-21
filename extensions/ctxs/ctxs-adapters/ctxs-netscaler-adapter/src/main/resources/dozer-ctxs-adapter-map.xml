@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings xmlns="http://dozer.sourceforge.net"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://dozer.sourceforge.net
+          http://dozer.sourceforge.net/schema/beanmapping.xsd">
+
+
+    <mapping map-null="false" map-id="ctxs-cert-cloud-domain-mapping">
+        <class-a>
+            com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Certificate
+        </class-a>
+        <class-b>
+            org.openstack.atlas.ctxs.service.domain.entity.Certificate
+        </class-b>
+        <field custom-converter="org.openstack.atlas.ctxs.api.mapper.dozer.factory.EnumConvertor">
+            <a>format</a>
+            <b>certificateFormat</b>
+        </field>
+        <field custom-converter="org.openstack.atlas.ctxs.api.mapper.dozer.factory.EnumConvertor">
+            <a>encoding</a>
+            <b>certificateEncodingType</b>
+        </field>
+        <field>
+            <a>keycontent</a>
+            <b>kcontent</b>
+        </field>
+        <field>
+            <a>certificatecontent</a>
+            <b>ccontent</b>
+        </field>
+        <field>
+            <a>status</a>
+            <b>certificatestatus</b>
+        </field>
+        <field>
+            <a>linkcertificates</a>
+            <b>lcertificates</b>
+        </field>
+    </mapping>
+    <mapping map-null="false" type="one-way">
+        <class-a>
+            org.openstack.atlas.ctxs.service.domain.entity.LinkCertificate
+        </class-a>
+        <class-b>
+            com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LinkCertificateDef
+        </class-b>
+        <field custom-converter="org.openstack.atlas.ctxs.api.mapper.dozer.factory.EnumConvertor">
+            <a>format</a>
+            <b>format</b>
+        </field>
+        <field custom-converter="org.openstack.atlas.ctxs.api.mapper.dozer.factory.EnumConvertor">
+            <a>encoding</a>
+            <b>encoding</b>
+        </field>
+    </mapping>
+</mappings>

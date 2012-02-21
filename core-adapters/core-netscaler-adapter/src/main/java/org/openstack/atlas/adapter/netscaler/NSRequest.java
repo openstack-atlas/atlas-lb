@@ -102,7 +102,7 @@ public class NSRequest
         	
         	if (method.toUpperCase() != "GET" && statuscode != Status.ACCEPTED.getStatusCode())
         	{
-				if(statuscode != Status.CREATED.getStatusCode())
+				if(statuscode != Status.CREATED.getStatusCode() && statuscode != Status.OK.getStatusCode()) // Must  202/200 in DELETE in loadbalancer/certificates etc
 					throw new IOException("Error : " + resp_body);
         	}
         	

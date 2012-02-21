@@ -12,6 +12,7 @@ import org.openstack.atlas.adapter.LoadBalancerAdapter;
 import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
 import org.openstack.atlas.adapter.exception.*;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,9 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
     private static String HTTP_COOKIE = "HTTP_COOKIE";
 	protected NodeRepository nodeRepository;
 
+    @Autowired
+    protected NSAdapterUtils nsAdapterUtils;
+
     public void setNodeRepository(NodeRepository nodeRepository) {
         this.nodeRepository = nodeRepository;
     }
@@ -41,13 +45,13 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
 
         com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer();
 
-        NSAdapterUtils.populateNSLoadBalancer(lb, nsLB);
+        nsAdapterUtils.populateNSLoadBalancer(lb, nsLB);
 
-        String requestBody = NSAdapterUtils.getRequestBody(nsLB); 
+        String requestBody = nsAdapterUtils.getRequestBody(nsLB); 
         String serviceUrl = lb.getHost().getEndpoint();
-        String resourceUrl = NSAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType);
+        String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType);
 
-        NSAdapterUtils.performRequest("POST", resourceUrl, requestBody);
+        nsAdapterUtils.performRequest("POST", resourceUrl, requestBody);
     }
 
     @Override
@@ -60,12 +64,12 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         Integer accountId = lb.getAccountId(); 
         
         com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer();
-        NSAdapterUtils.populateNSLoadBalancer(lb, nsLB);
+        nsAdapterUtils.populateNSLoadBalancer(lb, nsLB);
         
-		String requestBody = NSAdapterUtils.getRequestBody(nsLB);
+		String requestBody = nsAdapterUtils.getRequestBody(nsLB);
 		String serviceUrl = config.getHost().getEndpoint();
-		String resourceUrl = NSAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId);
-		NSAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
+		String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId);
+		nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
     }
 
     @Override
@@ -78,9 +82,9 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         Integer lbId = lb.getId();   
  
         String serviceUrl = config.getHost().getEndpoint();
-        String resourceUrl = NSAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, lbId);
+        String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, lbId);
 
-        NSAdapterUtils.performRequest("DELETE", resourceUrl);
+        nsAdapterUtils.performRequest("DELETE", resourceUrl);
     }
 
     @Override
@@ -94,12 +98,12 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         if(nodes.size() > 0)
         {
             com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Nodes nsNodes = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Nodes();
-            NSAdapterUtils.populateNSNodes(nodes, nsNodes.getNodes());
-            String requestBody = NSAdapterUtils.getRequestBody(nsNodes);
+            nsAdapterUtils.populateNSNodes(nodes, nsNodes.getNodes());
+            String requestBody = nsAdapterUtils.getRequestBody(nsNodes);
             String serviceUrl = config.getHost().getEndpoint();
-            String resourceUrl = NSAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
+            String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 			
-            NSAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
+            nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
 		}
     }
     
@@ -132,12 +136,12 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         String childResourceType = "connectionthrottle";
 		
         com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.ConnectionThrottle nsThrottle = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.ConnectionThrottle();
-		NSAdapterUtils.populateConnectionThrottle(conThrottle, nsThrottle);
-        String requestBody = NSAdapterUtils.getRequestBody(nsThrottle);
+		nsAdapterUtils.populateConnectionThrottle(conThrottle, nsThrottle);
+        String requestBody = nsAdapterUtils.getRequestBody(nsThrottle);
         String serviceUrl = config.getHost().getEndpoint();
-        String resourceUrl = NSAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
+        String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
-        NSAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
+        nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
     }
 
     @Override
@@ -149,9 +153,9 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         String childResourceType = "connectionthrottle";
 
         String serviceUrl = config.getHost().getEndpoint();
-        String resourceUrl = NSAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
+        String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
-        NSAdapterUtils.performRequest("DELETE", resourceUrl);
+        nsAdapterUtils.performRequest("DELETE", resourceUrl);
     }
 
     @Override
@@ -166,13 +170,13 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
 
         nsMon  = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.HealthMonitor();  
 
-        NSAdapterUtils.populateNSHealthMonitor(monitor, nsMon);
+        nsAdapterUtils.populateNSHealthMonitor(monitor, nsMon);
 
-        String requestBody = NSAdapterUtils.getRequestBody(nsMon);
+        String requestBody = nsAdapterUtils.getRequestBody(nsMon);
         String serviceUrl = config.getHost().getEndpoint();
-        String resourceUrl = NSAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
+        String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
-        NSAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
+        nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
     }
 
     @Override
@@ -184,9 +188,9 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         String childResourceType = "healthmonitor";
 
         String serviceUrl = config.getHost().getEndpoint();
-        String resourceUrl = NSAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
+        String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
-        NSAdapterUtils.performRequest("DELETE", resourceUrl);
+        nsAdapterUtils.performRequest("DELETE", resourceUrl);
     }
 
     @Override
@@ -198,12 +202,12 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         String childResourceType = "sessionpersistence";
 		
         com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.SessionPersistence nsPersistence = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.SessionPersistence();
-		NSAdapterUtils.populateSessionPersistence(sessionPersistence, nsPersistence);
-        String requestBody = NSAdapterUtils.getRequestBody(nsPersistence);
+		nsAdapterUtils.populateSessionPersistence(sessionPersistence, nsPersistence);
+        String requestBody = nsAdapterUtils.getRequestBody(nsPersistence);
         String serviceUrl = config.getHost().getEndpoint();
-        String resourceUrl = NSAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
+        String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
-        NSAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
+        nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
     }
 
     @Override
@@ -215,9 +219,9 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         String childResourceType = "sessionpersistence";
 
         String serviceUrl = config.getHost().getEndpoint();
-        String resourceUrl = NSAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
+        String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
-        NSAdapterUtils.performRequest("DELETE", resourceUrl, "");
+        nsAdapterUtils.performRequest("DELETE", resourceUrl, "");
     }
 
 
@@ -228,9 +232,9 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         Integer resourceId = lbId;
         String childResourceType = "nodes";
 		String serviceUrl = config.getHost().getEndpoint();
-		String resourceUrl = NSAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId,childResourceType) + "/" + nodeId;
+		String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId,childResourceType) + "/" + nodeId;
 		
-		NSAdapterUtils.performRequest("DELETE", resourceUrl);
+		nsAdapterUtils.performRequest("DELETE", resourceUrl);
     }
 }
 
