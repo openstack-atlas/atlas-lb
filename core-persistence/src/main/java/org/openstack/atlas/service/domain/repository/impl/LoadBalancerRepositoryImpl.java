@@ -29,7 +29,7 @@ public class LoadBalancerRepositoryImpl implements LoadBalancerRepository {
 
     final Log LOG = LogFactory.getLog(LoadBalancerRepositoryImpl.class);
     @PersistenceContext(unitName = "loadbalancing")
-    private EntityManager entityManager;
+    protected EntityManager entityManager;
 
     @Override
     public LoadBalancer getById(Integer id) throws EntityNotFoundException {
