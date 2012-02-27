@@ -399,19 +399,19 @@ public class NSAdapterUtils
         nsMon.setAttemptsBeforeDeactivation(monRetries);
         
 
-        if (monType == "CONNECT")
+        if (monType.equals("CONNECT"))
         { 
 			nsMon.setType(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.HealthMonitorType.CONNECT);
 			return; 
         }
 
-        if (monType == "HTTP")
+        if (monType.equals("HTTP"))
         { 
 			nsMon.setType(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.HealthMonitorType.HTTP);
             return;
         }
         
-        if (monType == "HTTPS")
+        if (monType.equals("HTTPS"))
         {         
 			nsMon.setType(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.HealthMonitorType.HTTPS);
             return;
@@ -456,7 +456,7 @@ public class NSAdapterUtils
     {
 		String pt = sp.getPersistenceType();
 		
-        if (pt == "HTTP_COOKIE")
+        if (pt.equals("HTTP_COOKIE"))
         { 
 			nsSP.setPersistenceType(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.PersistenceType.HTTP_COOKIE);
             return;

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension xmlns="http://docs.openstack.org/common/api/v1.0"
+            xmlns:atom="http://www.w3.org/2005/Atom"
+            name="Citrix Atlas SSL Termination" namespace="http://docs.citrix.com/identity/api/ext/CTXS-ATLAS-SSL/v1.0"
+            alias="CTXS-ATLAS-SSL"
+            updated="2012-02-24T13:25:27-06:00">
+            <description>
+                        Citrix extensions to Atlas v1.1 API
+                        enabling SSL termination configuration for
+                        load balancers.
+            </description>
+            <atom:link rel="describedby" type="application/pdf"
+                        href="https://github.com/openstack/atlas/master/extensions/ctxs/contrib/CTXS-ATLAS-SSL-service-devguide.pdf"/>
+</extension>

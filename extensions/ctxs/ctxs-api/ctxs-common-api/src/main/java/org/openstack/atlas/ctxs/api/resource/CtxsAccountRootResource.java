@@ -15,12 +15,11 @@ import javax.ws.rs.Path;
 public class CtxsAccountRootResource extends AccountRootResource {
 
     @Autowired
-    private CertificatesResource certificatesResource;
+    private CtxsExtResource extResource;
     
-
-    @Path("certificates")
-    public CertificatesResource retrieveCertificatesResource() {
-        certificatesResource.setAccountId(accountId);
-        return certificatesResource;
-    }  
+    @Path("ext/ctxs")
+    public CtxsExtResource retrieveExtResource() {
+        extResource.setAccountId(accountId);
+        return extResource;
+    }
 }
