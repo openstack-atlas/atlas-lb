@@ -41,6 +41,13 @@
             <artifactId>core-zxtm-adapter</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>core-stingray-adapter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>core-netscaler-adapter</artifactId>
