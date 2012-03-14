@@ -52,7 +52,9 @@
         <spring.version>3.0.4.RELEASE</spring.version>
         <cxf.version>2.3.1</cxf.version>
         <com.zxtm.service.version>1.1.0</com.zxtm.service.version>
+        <com.riverbed.stingray.service.version>1.1.0</com.riverbed.stingray.service.version>
         <org.openstack.cloud.lb.zxtmadapter.version>${project.version}</org.openstack.cloud.lb.zxtmadapter.version>
+        <org.openstack.cloud.lb.stingrayadapter.version>${project.version}</org.openstack.cloud.lb.stingrayadapter.version>
         <mockito.version>1.8.5</mockito.version>
     </properties>
 
