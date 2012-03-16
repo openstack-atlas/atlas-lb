@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -215,5 +216,45 @@ public class RaxVirtualIpServiceImpl extends VirtualIpServiceImpl implements Rax
         if (!isIpv6VipAllocatedToAnotherLoadBalancer(lb, virtualIpv6)) {
             virtualIpv6Repository.deleteVirtualIp(virtualIpv6);
         }
+    }
+
+    @Override
+    protected LoadBalancer assignExtraVipsToLoadBalancer(LoadBalancer raxLoadBalancer) throws PersistenceServiceException
+    {
+        boolean emptyVirtualIpv6Set = false;
+
+        // If Virtual Ips have already been assigned by core, then we need do nothing
+        if (raxLoadBalancer.getLoadBalancerJoinVip6Set().isEmpty() && raxLoadBalancer.getLoadBalancerJoinVipSet().isEmpty())   {
+            assignDefaultIPv6ToLoadBalancer(raxLoadBalancer);
+            emptyVirtualIpv6Set = true;
+        }
+
+        if (!raxLoadBalancer.getLoadBalancerJoinVipSet().isEmpty())
+            return raxLoadBalancer;
+
+
+
+        if (emptyVirtualIpv6Set) {
+            Set<LoadBalancerJoinVip> newVipConfig = raxLoadBalancer.getLoadBalancerJoinVipSet();
+
+            if (newVipConfig == null)
+                newVipConfig = new HashSet<LoadBalancerJoinVip>();
+
+
+            VirtualIp vip = new VirtualIp();
+            vip.setAddress(null);
+            vip.setVipType(VirtualIpType.PUBLIC);
+
+            VirtualIp newVip = allocateIpv4VirtualIp(vip, raxLoadBalancer.getHost().getCluster());
+
+            LoadBalancerJoinVip newJoinRecord = new LoadBalancerJoinVip();
+            newJoinRecord.setVirtualIp(newVip);
+            newVipConfig.add(newJoinRecord);
+
+            raxLoadBalancer.setLoadBalancerJoinVipSet(newVipConfig);
+
+        }
+
+        return raxLoadBalancer;
     }
 }

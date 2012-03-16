@@ -70,8 +70,43 @@ public class VirtualIpServiceImpl implements VirtualIpService {
                 loadBalancer.setLoadBalancerJoinVip6Set(newVip6Config);
             }
         }
+
+        assignExtraVipsToLoadBalancer(loadBalancer);
+
+        // By default, we always allocate at least an IPv6 address if none is specified by the user or added by extensions
+        if (loadBalancer.getLoadBalancerJoinVipSet().isEmpty() && loadBalancer.getLoadBalancerJoinVip6Set().isEmpty())
+        {
+            LOG.debug("Core is assigning a default IPV6 virtual Ip");
+            assignDefaultIPv6ToLoadBalancer(loadBalancer);
+        }
+
         return loadBalancer;
     }
+
+
+    protected LoadBalancer assignDefaultIPv6ToLoadBalancer(LoadBalancer loadBalancer) throws PersistenceServiceException
+    {
+
+        Set<LoadBalancerJoinVip6> newVip6Config = new HashSet<LoadBalancerJoinVip6>();
+
+        VirtualIpv6 ipv6 = allocateIpv6VirtualIp(loadBalancer);
+        LoadBalancerJoinVip6 jbjv6 = new LoadBalancerJoinVip6();
+        jbjv6.setVirtualIp(ipv6);
+        newVip6Config.add(jbjv6);
+        loadBalancer.setLoadBalancerJoinVip6Set(newVip6Config);
+
+        LOG.debug("We assigned the default IPv6 virtual IP");
+        return loadBalancer;
+    }
+
+
+    protected LoadBalancer assignExtraVipsToLoadBalancer(LoadBalancer loadBalancer) throws PersistenceServiceException
+    {
+        // Extensions can override this method and add extra VIPs to loadBalancer.
+        return loadBalancer;
+    }
+
+
 
     @Transactional
     public void removeAllVipsFromLoadBalancer(LoadBalancer lb) {
