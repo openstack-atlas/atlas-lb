@@ -180,8 +180,9 @@ public class LoadBalancerRepositoryImpl implements LoadBalancerRepository {
         }
         final boolean isActive = lb.getStatus().equals(CoreLoadBalancerStatus.ACTIVE);
         final boolean isPendingOrActive = lb.getStatus().equals(CoreLoadBalancerStatus.PENDING_UPDATE) || isActive;
+        final boolean isError = lb.getStatus().equals(CoreLoadBalancerStatus.ERROR);
 
-        if (allowConcurrentModifications ? isPendingOrActive : isActive) {
+        if (isError  || (allowConcurrentModifications ? isPendingOrActive : isActive)) {
             lb.setStatus(newStatus);
             lb.setUpdated(Calendar.getInstance());
             entityManager.merge(lb);
