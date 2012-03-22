@@ -46,6 +46,9 @@ public class LoadBalancer extends Entity implements Serializable {
     @Column(name = "status", nullable = false)
     private String status;
 
+    @Column(name = "created_on_adapter", nullable = true)
+    private Boolean created_on_adapter;
+
     @OneToMany(mappedBy = "loadBalancer", fetch = FetchType.EAGER)
     private Set<LoadBalancerJoinVip> loadBalancerJoinVipSet = new HashSet<LoadBalancerJoinVip>();
 
@@ -194,6 +197,16 @@ public class LoadBalancer extends Entity implements Serializable {
         if (!AtlasTypeHelper.isValidLoadBalancerStatus(status)) throw new RuntimeException("Load balancer status not supported.");
         this.status = status;
     }
+
+    public Boolean isCreatedOnAdapter() {
+        return created_on_adapter;
+    }
+
+    public void setCreatedOnAdapter(Boolean createdOnAdapter) {
+        if (!AtlasTypeHelper.isValidLoadBalancerStatus(status)) throw new RuntimeException("Load balancer status not supported.");
+        this.created_on_adapter = createdOnAdapter;
+    }
+
 
     private static String valueOrNull(Object obj) {
         return obj == null ? "null" : obj.toString();
