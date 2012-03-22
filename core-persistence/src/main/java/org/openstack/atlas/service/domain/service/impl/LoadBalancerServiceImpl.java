@@ -121,6 +121,9 @@ public class LoadBalancerServiceImpl implements LoadBalancerService {
                 LoadBalancer dbLoadBalancer = loadBalancerRepository.getByIdAndAccountId(loadBalancerId, accountId);
                 if (!dbLoadBalancer.getStatus().equals(CoreLoadBalancerStatus.ACTIVE)) {
                     LOG.warn(StringHelper.immutableLoadBalancer(dbLoadBalancer));
+                    if (!dbLoadBalancer.getStatus().equals(CoreLoadBalancerStatus.ERROR)) {
+                        badLbIds.add(loadBalancerId); 
+                    }
                 }
             } catch (EntityNotFoundException e) {
                 badLbIds.add(loadBalancerId);
