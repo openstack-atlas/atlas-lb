@@ -65,12 +65,6 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
         entityManager.remove(loadBalancerJoinVip);
     }
 
-    @Override
-    public void deallocateVirtualIp(VirtualIp virtualIp) {
-        virtualIp = entityManager.find(VirtualIp.class, virtualIp.getId());
-        entityManager.merge(virtualIp);
-        LOG.info(String.format("Virtual Ip '%d' de-allocated.", virtualIp.getId()));
-    }
 
 
     @Override

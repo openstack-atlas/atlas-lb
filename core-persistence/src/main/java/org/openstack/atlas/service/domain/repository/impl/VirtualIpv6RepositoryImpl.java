@@ -85,41 +85,6 @@ public class VirtualIpv6RepositoryImpl implements VirtualIpv6Repository {
         return entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).getSingleResult();
     }
 
-    /*
-    @Override
-    public Integer getNextVipOctet(Integer accountId) {
-        List<Integer> maxList;
-        Integer max;
-        int retry_count = 3;
-
-        String qStr = "SELECT max(v.vipOctets) from VirtualIpv6 v where v.accountId=:aid";
-
-        while (retry_count > 0) {
-            retry_count--;
-            try {
-                maxList = entityManager.createQuery(qStr).setLockMode(LockModeType.PESSIMISTIC_WRITE).setParameter("aid", accountId).getResultList();
-                max = maxList.get(0);
-                if (max == null) {
-                    max = 0;
-                }
-                max++; // The next VipOctet
-                return max;
-            } catch (PersistenceException e) {
-                LOG.warn(String.format("Deadlock detected. %d retries left.", retry_count));
-                if (retry_count <= 0) throw e;
-
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
-                }
-            }
-        }
-
-        throw new ServiceUnavailableException("Too many create requests received. Please try again in a few moments.");
-    }
-    */
-    
     @Override
     public Map<Integer, List<LoadBalancer>> getPorts(Integer vid) {
         Map<Integer, List<LoadBalancer>> map = new TreeMap<Integer, List<LoadBalancer>>();

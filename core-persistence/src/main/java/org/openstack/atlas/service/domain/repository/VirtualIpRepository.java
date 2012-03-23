@@ -19,7 +19,6 @@ public interface VirtualIpRepository {
 
     void removeJoinRecord(LoadBalancerJoinVip loadBalancerJoinVip);
 
-    void deallocateVirtualIp(VirtualIp virtualIp);
 
     Account getLockedAccountRecord(Integer accountId);
     

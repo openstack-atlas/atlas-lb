@@ -11,5 +11,4 @@ public interface VirtualIpService {
 
     void addAccountRecord(Integer accountId) throws NoSuchAlgorithmException;
 
-    void removeAllVipsFromLoadBalancer(LoadBalancer lb);
 }

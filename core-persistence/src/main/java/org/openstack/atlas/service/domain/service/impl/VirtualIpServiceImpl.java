@@ -35,7 +35,9 @@ public class VirtualIpServiceImpl implements VirtualIpService {
         if (!loadBalancer.getLoadBalancerJoinVipSet().isEmpty()) {
             Set<LoadBalancerJoinVip> newVipConfig = new HashSet<LoadBalancerJoinVip>();
             List<VirtualIp> vipsOnAccount = virtualIpRepository.getVipsByAccountId(loadBalancer.getAccountId());
-            for (LoadBalancerJoinVip loadBalancerJoinVip : loadBalancer.getLoadBalancerJoinVipSet()) {
+            Set<LoadBalancerJoinVip> loadBalancerJoinVipSetConfig = loadBalancer.getLoadBalancerJoinVipSet();
+			loadBalancer.setLoadBalancerJoinVipSet(null);                        
+            for (LoadBalancerJoinVip loadBalancerJoinVip : loadBalancerJoinVipSetConfig) {
                 if (loadBalancerJoinVip.getVirtualIp().getId() == null) {
                     // Add a new vip to set
                     VirtualIp newVip = allocateIpv4VirtualIp(loadBalancer);
@@ -55,8 +57,9 @@ public class VirtualIpServiceImpl implements VirtualIpService {
             List<VirtualIpv6> vips6OnAccount = virtualIpv6Repository.getVipsByAccountId(loadBalancer.getAccountId());
             Set<LoadBalancerJoinVip6> loadBalancerJoinVip6SetConfig = loadBalancer.getLoadBalancerJoinVip6Set();
             loadBalancer.setLoadBalancerJoinVip6Set(null);
-            for (LoadBalancerJoinVip6 loadBalancerJoinVip6 : loadBalancerJoinVip6SetConfig) {
+            for (LoadBalancerJoinVip6 loadBalancerJoinVip6 : loadBalancerJoinVip6SetConfig) {      
                 if (loadBalancerJoinVip6.getVirtualIp().getId() == null) {
+                    // Add a new vip to set                
                     VirtualIpv6 ipv6 = allocateIpv6VirtualIp(loadBalancer);
                     LoadBalancerJoinVip6 jbjv6 = new LoadBalancerJoinVip6();
                     jbjv6.setVirtualIp(ipv6);
@@ -106,59 +109,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
 
 
 
-    @Transactional
-    public void removeAllVipsFromLoadBalancer(LoadBalancer lb) {
-        for (LoadBalancerJoinVip loadBalancerJoinVip : lb.getLoadBalancerJoinVipSet()) {
-            virtualIpRepository.removeJoinRecord(loadBalancerJoinVip);
-            reclaimVirtualIp(lb, loadBalancerJoinVip.getVirtualIp());
-        }
 
-        for (LoadBalancerJoinVip6 loadBalancerJoinVip6 : lb.getLoadBalancerJoinVip6Set()) {
-            virtualIpv6Repository.removeJoinRecord(loadBalancerJoinVip6);
-            reclaimIpv6VirtualIp(lb, loadBalancerJoinVip6.getVirtualIp());
-        }
-    }
-
-    @Transactional
-    public boolean isVipAllocatedToAnotherLoadBalancer(LoadBalancer lb, VirtualIp virtualIp) {
-        List<LoadBalancerJoinVip> joinRecords = virtualIpRepository.getJoinRecordsForVip(virtualIp);
-
-        for (LoadBalancerJoinVip joinRecord : joinRecords) {
-            if (!joinRecord.getLoadBalancer().getId().equals(lb.getId())) {
-                LOG.debug(String.format("Virtual ip '%d' is used by a load balancer other than load balancer '%d'.", virtualIp.getId(), lb.getId()));
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void reclaimVirtualIp(LoadBalancer lb, VirtualIp virtualIp) {
-        if (!isVipAllocatedToAnotherLoadBalancer(lb, virtualIp)) {
-            virtualIpRepository.deallocateVirtualIp(virtualIp);
-        }
-    }
-
-    @Transactional
-    public boolean isIpv6VipAllocatedToAnotherLoadBalancer(LoadBalancer lb, VirtualIpv6 virtualIp) {
-        List<LoadBalancerJoinVip6> joinRecords = virtualIpv6Repository.getJoinRecordsForVip(virtualIp);
-
-        for (LoadBalancerJoinVip6 joinRecord : joinRecords) {
-            if (!joinRecord.getLoadBalancer().getId().equals(lb.getId())) {
-                LOG.debug(String.format("IPv6 virtual ip '%d' is used by a load balancer other than load balancer '%d'.", virtualIp.getId(), lb.getId()));
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
-    private void reclaimIpv6VirtualIp(LoadBalancer lb, VirtualIpv6 virtualIpv6) {
-        if (!isIpv6VipAllocatedToAnotherLoadBalancer(lb, virtualIpv6)) {
-            virtualIpv6Repository.deleteVirtualIp(virtualIpv6);
-        }
-    }
 
     @Transactional
     public void addAccountRecord(Integer accountId) throws NoSuchAlgorithmException {
