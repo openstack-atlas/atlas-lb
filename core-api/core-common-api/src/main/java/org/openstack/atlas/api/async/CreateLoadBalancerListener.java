@@ -75,6 +75,7 @@ public class CreateLoadBalancerListener extends BaseListener {
             LOG.debug("Successfully created a load balancer via adapter.");
         } catch (Exception e) {
             dbLoadBalancer.setStatus(ERROR);
+            dbLoadBalancer.setCreatedOnAdapter(false);
             NodesHelper.setNodesToStatus(dbLoadBalancer, CoreNodeStatus.OFFLINE);
             loadBalancerRepository.update(dbLoadBalancer);
             String alertDescription = String.format("An error occurred while creating loadbalancer '%d' via adapter.", dbLoadBalancer.getId());
@@ -86,6 +87,7 @@ public class CreateLoadBalancerListener extends BaseListener {
 
         // Update load balancer in DB
         dbLoadBalancer.setStatus(ACTIVE);
+        dbLoadBalancer.setCreatedOnAdapter(true);
         NodesHelper.setNodesToStatus(dbLoadBalancer, CoreNodeStatus.ONLINE);
         dbLoadBalancer = loadBalancerRepository.update(dbLoadBalancer);
 
