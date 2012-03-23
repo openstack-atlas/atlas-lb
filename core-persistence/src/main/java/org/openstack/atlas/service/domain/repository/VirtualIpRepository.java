@@ -25,5 +25,7 @@ public interface VirtualIpRepository {
 
     VirtualIp allocateIpv4VipAfterDate(Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException;
 
+    Account getLockedAccountRecord(Integer accountId);
+    
     Map<Integer, List<LoadBalancer>> getPorts(Integer vid);
 }

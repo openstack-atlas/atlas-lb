@@ -19,8 +19,19 @@ public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity 
 
     @OneToMany(mappedBy = "virtualIp")
     private Set<LoadBalancerJoinVip> loadBalancerJoinVipSet = new HashSet<LoadBalancerJoinVip>();
+    
+    @Column(name = "account_id", nullable = false)
+    private Integer accountId;
+    
+    public Integer getAccountId() {
+        return accountId;
+    }
 
-    @Column(name = "address", length = 39, unique = true, nullable = false)
+    public void setAccountId(Integer accountId) {
+        this.accountId = accountId;
+    }
+        
+    @Column(name = "address", length = 39, unique = true, nullable = true)
     private String address;
 
     @Enumerated(EnumType.STRING)

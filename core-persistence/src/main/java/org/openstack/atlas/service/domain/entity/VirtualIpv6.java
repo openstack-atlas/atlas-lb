@@ -23,20 +23,14 @@ public class VirtualIpv6 extends org.openstack.atlas.service.domain.entity.Entit
     @OneToMany(mappedBy = "virtualIp")
     private Set<LoadBalancerJoinVip6> loadBalancerJoinVip6Set = new HashSet<LoadBalancerJoinVip6>();
 
-
     @Column(name = "account_id", nullable = false)
     private Integer accountId;
 
     @Column(name = "vip_octets", nullable = true)
     private Integer vipOctets;
 
-    public Integer getVipOctets() {
-        return vipOctets;
-    }
-
-    public void setVipOctets(Integer vipOctets) {
-        this.vipOctets = vipOctets;
-    }
+    @Column(name = "address", length = 64, unique = true, nullable = true)
+    private String address;
 
     public Integer getAccountId() {
         return accountId;
@@ -46,6 +40,16 @@ public class VirtualIpv6 extends org.openstack.atlas.service.domain.entity.Entit
         this.accountId = accountId;
     }
 
+    
+    public Integer getVipOctets() {
+        return vipOctets;
+    }
+
+    public void setVipOctets(Integer vipOctets) {
+        this.vipOctets = vipOctets;
+    }
+
+
     public Set<LoadBalancerJoinVip6> getLoadBalancerJoinVip6Set() {
         return loadBalancerJoinVip6Set;
     }
@@ -54,7 +58,14 @@ public class VirtualIpv6 extends org.openstack.atlas.service.domain.entity.Entit
         this.loadBalancerJoinVip6Set = loadBalancerJoinVip6Set;
     }
 
+    public String getAddress() {
+        return address;
+    }
 
+    public void setAddress(String address) {
+        this.address = address;
+    }
+    
     public String getDerivedIpString() throws IPStringConversionException1 {
         String out;
         String clusterCidrString = "fd24:f480:ce44:91bc::/64";

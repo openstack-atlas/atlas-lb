@@ -25,7 +25,5 @@ public interface VirtualIpv6Repository {
 
     Account getLockedAccountRecord(Integer accountId);
 
-    Integer getNextVipOctet(Integer accountId);
-
     Map<Integer, List<LoadBalancer>> getPorts(Integer vid);
 }

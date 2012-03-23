@@ -85,6 +85,7 @@ public class VirtualIpv6RepositoryImpl implements VirtualIpv6Repository {
         return entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).getSingleResult();
     }
 
+    /*
     @Override
     public Integer getNextVipOctet(Integer accountId) {
         List<Integer> maxList;
@@ -117,7 +118,8 @@ public class VirtualIpv6RepositoryImpl implements VirtualIpv6Repository {
 
         throw new ServiceUnavailableException("Too many create requests received. Please try again in a few moments.");
     }
-
+    */
+    
     @Override
     public Map<Integer, List<LoadBalancer>> getPorts(Integer vid) {
         Map<Integer, List<LoadBalancer>> map = new TreeMap<Integer, List<LoadBalancer>>();

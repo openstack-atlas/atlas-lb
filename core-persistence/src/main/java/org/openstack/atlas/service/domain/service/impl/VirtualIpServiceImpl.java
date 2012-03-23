@@ -38,7 +38,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
             for (LoadBalancerJoinVip loadBalancerJoinVip : loadBalancer.getLoadBalancerJoinVipSet()) {
                 if (loadBalancerJoinVip.getVirtualIp().getId() == null) {
                     // Add a new vip to set
-                    VirtualIp newVip = allocateIpv4VirtualIp(loadBalancerJoinVip.getVirtualIp());
+                    VirtualIp newVip = allocateIpv4VirtualIp(loadBalancer);
                     LoadBalancerJoinVip newJoinRecord = new LoadBalancerJoinVip();
                     newJoinRecord.setVirtualIp(newVip);
                     newVipConfig.add(newJoinRecord);
@@ -223,6 +223,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
         return sharedVips;
     }
 
+    /*
     @Transactional
     public VirtualIp allocateIpv4VirtualIp(VirtualIp virtualIp) throws OutOfVipsException {
         Calendar timeConstraintForVipReuse = Calendar.getInstance();
@@ -244,14 +245,29 @@ public class VirtualIpServiceImpl implements VirtualIpService {
             }
         }
     }
+    */
+    
+    @Transactional
+    public VirtualIp allocateIpv4VirtualIp(LoadBalancer loadBalancer) throws EntityNotFoundException {
+        // Acquire lock on account row due to concurrency issue
+        LOG.debug("Entered allocateIpv4VirtualIp");
+        virtualIpRepository.getLockedAccountRecord(loadBalancer.getAccountId());
+        LOG.debug("In allocateIpv4VirtualIp(): after call to virtualIpv6Repository.getLockedAccountRecord");
 
+        VirtualIp ipv4 = new VirtualIp();
+        ipv4.setAccountId(loadBalancer.getAccountId());
+        virtualIpRepository.persist(ipv4);
+        return ipv4;
+    }
+    
+        
     @Transactional
     public VirtualIpv6 allocateIpv6VirtualIp(LoadBalancer loadBalancer) throws EntityNotFoundException {
         // Acquire lock on account row due to concurrency issue
         LOG.debug("Entered allocateIpv6VirtualIp");
         virtualIpv6Repository.getLockedAccountRecord(loadBalancer.getAccountId());
         LOG.debug("In allocateIpv6VirtualIp(): after call to virtualIpv6Repository.getLockedAccountRecord");
-        Integer vipOctets = virtualIpv6Repository.getNextVipOctet(loadBalancer.getAccountId());
+        //Integer vipOctets = virtualIpv6Repository.getNextVipOctet(loadBalancer.getAccountId());
 
         VirtualIpv6 ipv6 = new VirtualIpv6();
         ipv6.setAccountId(loadBalancer.getAccountId());

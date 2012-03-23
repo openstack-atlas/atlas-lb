@@ -81,14 +81,11 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
         CriteriaQuery<VirtualIp> criteria = builder.createQuery(VirtualIp.class);
         Root<VirtualIp> vipRoot = criteria.from(VirtualIp.class);
 
-        Predicate isNotAllocated = builder.equal(vipRoot.get(VirtualIp_.isAllocated), false);
-        Predicate lastDeallocationIsNull = builder.isNull(vipRoot.get(VirtualIp_.lastDeallocation));
-        Predicate isBeforeLastDeallocation = builder.lessThan(vipRoot.get(VirtualIp_.lastDeallocation), vipReuseTime);
         Predicate isVipType = builder.equal(vipRoot.get(VirtualIp_.vipType), vipType);
 
 
         criteria.select(vipRoot);
-        criteria.where(builder.and(isNotAllocated, isVipType, builder.or(lastDeallocationIsNull, isBeforeLastDeallocation)));
+        criteria.where(builder.and(isVipType));
 
         try {
             vipCandidate = entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).setMaxResults(1).getSingleResult();
@@ -97,8 +94,7 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
             throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
         }
 
-        vipCandidate.setAllocated(true);
-        vipCandidate.setLastAllocation(Calendar.getInstance());
+
         entityManager.merge(vipCandidate);
         return vipCandidate;
     }
@@ -110,13 +106,11 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
         CriteriaQuery<VirtualIp> criteria = builder.createQuery(VirtualIp.class);
         Root<VirtualIp> vipRoot = criteria.from(VirtualIp.class);
 
-        Predicate isNotAllocated = builder.equal(vipRoot.get(VirtualIp_.isAllocated), false);
-        Predicate isAfterLastDeallocation = builder.greaterThan(vipRoot.get(VirtualIp_.lastDeallocation), vipReuseTime);
         Predicate isVipType = builder.equal(vipRoot.get(VirtualIp_.vipType), vipType);
 
 
         criteria.select(vipRoot);
-        criteria.where(isNotAllocated, isAfterLastDeallocation, isVipType);
+        criteria.where(isVipType);
 
         try {
             vipCandidate = entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).setMaxResults(1).getSingleResult();
@@ -125,8 +119,6 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
             throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
         }
 
-        vipCandidate.setAllocated(true);
-        vipCandidate.setLastAllocation(Calendar.getInstance());
         entityManager.merge(vipCandidate);
         return vipCandidate;
     }
@@ -153,5 +145,18 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
             map.get(port).add(lb);
         }
         return map;
+    }
+
+    @Override
+    public Account getLockedAccountRecord(Integer accountId) {
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Account> criteria = builder.createQuery(Account.class);
+        Root<Account> accountRoot = criteria.from(Account.class);
+
+        Predicate recordWithId = builder.equal(accountRoot.get(Account_.id), accountId);
+
+        criteria.select(accountRoot);
+        criteria.where(recordWithId);
+        return entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).getSingleResult();
     }
 }
