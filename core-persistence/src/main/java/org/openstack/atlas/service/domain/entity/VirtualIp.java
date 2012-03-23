@@ -27,9 +27,6 @@ public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity 
     @Column(name = "type")
     private VirtualIpType vipType;
 
-    @ManyToOne
-    @JoinColumn(name = "cluster_id", nullable = true) // TODO: Should not be nullable. Need to get cluster internally
-    private Cluster cluster;
 
     @Column(name = "last_deallocation")
     @Temporal(TemporalType.TIMESTAMP)
@@ -67,13 +64,6 @@ public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity 
         this.vipType = vipType;
     }
 
-    public Cluster getCluster() {
-        return this.cluster;
-    }
-
-    public void setCluster(Cluster cluster) {
-        this.cluster = cluster;
-    }
 
     public Calendar getLastDeallocation() {
         return lastDeallocation;
@@ -105,7 +95,6 @@ public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity 
                 "loadBalancerJoinVipSet=" + loadBalancerJoinVipSet +
                 ", ipAddress='" + address + '\'' +
                 ", vipType=" + vipType +
-                ", cluster=" + cluster +
                 ", lastDeallocation=" + lastDeallocation +
                 ", lastAllocation=" + lastAllocation +
                 ", isAllocated=" + isAllocated +

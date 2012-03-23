@@ -28,22 +28,9 @@ public class Cluster extends org.openstack.atlas.service.domain.entity.Entity im
     @Column(name = "password", nullable = false)
     private String password;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "cluster")
-    private Set<VirtualIp> virtualIps = new HashSet<VirtualIp>();
-
     @Column(name = "cluster_ipv6_cidr", length = 43, nullable = true)
     private String clusterIpv6Cidr;
-
-    public Set<VirtualIp> getVirtualIps() {
-        if (virtualIps == null) {
-            virtualIps = new HashSet<VirtualIp>();
-        }
-        return virtualIps;
-    }
-
-    public void setVirtualIps(Set<VirtualIp> virtualIps) {
-        this.virtualIps = virtualIps;
-    }
+    
 
     public String getName() {
         return this.name;
@@ -92,7 +79,6 @@ public class Cluster extends org.openstack.atlas.service.domain.entity.Entity im
                 ", description='" + description + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
-                ", virtualIps=" + virtualIps +
                 ", clusterIpv6Cidr='" + clusterIpv6Cidr + '\'' +
                 '}';
     }

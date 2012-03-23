@@ -63,10 +63,6 @@ public class LoadBalancer extends Entity implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "loadBalancer", fetch = FetchType.LAZY)
     private Set<UsageRecord> usage = new HashSet<UsageRecord>();
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "host_id", nullable = true)
-    private Host host;
-
     @OneToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE}, mappedBy = "loadBalancer")
     private SessionPersistence sessionPersistence;
 
@@ -113,14 +109,6 @@ public class LoadBalancer extends Entity implements Serializable {
 
     public void setUsage(Set<UsageRecord> usage) {
         this.usage = usage;
-    }
-
-    public Host getHost() {
-        return host;
-    }
-
-    public void setHost(Host host) {
-        this.host = host;
     }
 
     public HealthMonitor getHealthMonitor() {

@@ -75,7 +75,7 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
     }
 
     @Override
-    public VirtualIp allocateIpv4VipBeforeDate(Cluster cluster, Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException {
+    public VirtualIp allocateIpv4VipBeforeDate(Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException {
         VirtualIp vipCandidate;
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<VirtualIp> criteria = builder.createQuery(VirtualIp.class);
@@ -85,10 +85,10 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
         Predicate lastDeallocationIsNull = builder.isNull(vipRoot.get(VirtualIp_.lastDeallocation));
         Predicate isBeforeLastDeallocation = builder.lessThan(vipRoot.get(VirtualIp_.lastDeallocation), vipReuseTime);
         Predicate isVipType = builder.equal(vipRoot.get(VirtualIp_.vipType), vipType);
-        Predicate belongsToCluster = builder.equal(vipRoot.get(VirtualIp_.cluster), cluster);
+
 
         criteria.select(vipRoot);
-        criteria.where(builder.and(isNotAllocated, isVipType, belongsToCluster, builder.or(lastDeallocationIsNull, isBeforeLastDeallocation)));
+        criteria.where(builder.and(isNotAllocated, isVipType, builder.or(lastDeallocationIsNull, isBeforeLastDeallocation)));
 
         try {
             vipCandidate = entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).setMaxResults(1).getSingleResult();
@@ -104,7 +104,7 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
     }
 
     @Override
-    public VirtualIp allocateIpv4VipAfterDate(Cluster cluster, Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException {
+    public VirtualIp allocateIpv4VipAfterDate(Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException {
         VirtualIp vipCandidate;
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<VirtualIp> criteria = builder.createQuery(VirtualIp.class);
@@ -113,10 +113,10 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
         Predicate isNotAllocated = builder.equal(vipRoot.get(VirtualIp_.isAllocated), false);
         Predicate isAfterLastDeallocation = builder.greaterThan(vipRoot.get(VirtualIp_.lastDeallocation), vipReuseTime);
         Predicate isVipType = builder.equal(vipRoot.get(VirtualIp_.vipType), vipType);
-        Predicate belongsToCluster = builder.equal(vipRoot.get(VirtualIp_.cluster), cluster);
+
 
         criteria.select(vipRoot);
-        criteria.where(isNotAllocated, isAfterLastDeallocation, isVipType, belongsToCluster);
+        criteria.where(isNotAllocated, isAfterLastDeallocation, isVipType);
 
         try {
             vipCandidate = entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).setMaxResults(1).getSingleResult();

@@ -6,7 +6,6 @@ import org.openstack.atlas.common.crypto.HashUtil;
 import org.openstack.atlas.service.domain.common.Constants;
 import org.openstack.atlas.service.domain.entity.*;
 import org.openstack.atlas.service.domain.exception.*;
-import org.openstack.atlas.service.domain.repository.ClusterRepository;
 import org.openstack.atlas.service.domain.repository.VirtualIpRepository;
 import org.openstack.atlas.service.domain.repository.VirtualIpv6Repository;
 import org.openstack.atlas.service.domain.service.VirtualIpService;
@@ -28,8 +27,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
     protected VirtualIpRepository virtualIpRepository;
     @Autowired
     protected VirtualIpv6Repository virtualIpv6Repository;
-    @Autowired
-    protected ClusterRepository clusterRepository;
+
 
     @Override
     @Transactional
@@ -40,7 +38,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
             for (LoadBalancerJoinVip loadBalancerJoinVip : loadBalancer.getLoadBalancerJoinVipSet()) {
                 if (loadBalancerJoinVip.getVirtualIp().getId() == null) {
                     // Add a new vip to set
-                    VirtualIp newVip = allocateIpv4VirtualIp(loadBalancerJoinVip.getVirtualIp(), loadBalancer.getHost().getCluster());
+                    VirtualIp newVip = allocateIpv4VirtualIp(loadBalancerJoinVip.getVirtualIp());
                     LoadBalancerJoinVip newJoinRecord = new LoadBalancerJoinVip();
                     newJoinRecord.setVirtualIp(newVip);
                     newVipConfig.add(newJoinRecord);
@@ -88,7 +86,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
     {
 
         Set<LoadBalancerJoinVip6> newVip6Config = new HashSet<LoadBalancerJoinVip6>();
-
+        LOG.debug("Before calling allocateIpv6VirtualIp");
         VirtualIpv6 ipv6 = allocateIpv6VirtualIp(loadBalancer);
         LoadBalancerJoinVip6 jbjv6 = new LoadBalancerJoinVip6();
         jbjv6.setVirtualIp(ipv6);
@@ -226,7 +224,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
     }
 
     @Transactional
-    public VirtualIp allocateIpv4VirtualIp(VirtualIp virtualIp, Cluster cluster) throws OutOfVipsException {
+    public VirtualIp allocateIpv4VirtualIp(VirtualIp virtualIp) throws OutOfVipsException {
         Calendar timeConstraintForVipReuse = Calendar.getInstance();
         timeConstraintForVipReuse.add(Calendar.DATE, -Constants.NUM_DAYS_BEFORE_VIP_REUSE);
 
@@ -235,11 +233,11 @@ public class VirtualIpServiceImpl implements VirtualIpService {
         }
 
         try {
-            return virtualIpRepository.allocateIpv4VipBeforeDate(cluster, timeConstraintForVipReuse, virtualIp.getVipType());
+            return virtualIpRepository.allocateIpv4VipBeforeDate(timeConstraintForVipReuse, virtualIp.getVipType());
         } catch (OutOfVipsException e) {
             LOG.warn(String.format("Out of IPv4 virtual ips that were de-allocated before '%s'.", timeConstraintForVipReuse.getTime()));
             try {
-                return virtualIpRepository.allocateIpv4VipAfterDate(cluster, timeConstraintForVipReuse, virtualIp.getVipType());
+                return virtualIpRepository.allocateIpv4VipAfterDate(timeConstraintForVipReuse, virtualIp.getVipType());
             } catch (OutOfVipsException e2) {
                 e2.printStackTrace();
                 throw e2;
@@ -250,18 +248,17 @@ public class VirtualIpServiceImpl implements VirtualIpService {
     @Transactional
     public VirtualIpv6 allocateIpv6VirtualIp(LoadBalancer loadBalancer) throws EntityNotFoundException {
         // Acquire lock on account row due to concurrency issue
+        LOG.debug("Entered allocateIpv6VirtualIp");
         virtualIpv6Repository.getLockedAccountRecord(loadBalancer.getAccountId());
-
+        LOG.debug("In allocateIpv6VirtualIp(): after call to virtualIpv6Repository.getLockedAccountRecord");
         Integer vipOctets = virtualIpv6Repository.getNextVipOctet(loadBalancer.getAccountId());
-        Cluster c = clusterRepository.getById(loadBalancer.getHost().getCluster().getId());
 
         VirtualIpv6 ipv6 = new VirtualIpv6();
-        ipv6.setCluster(c);
         ipv6.setAccountId(loadBalancer.getAccountId());
-        ipv6.setVipOctets(vipOctets);
         virtualIpRepository.persist(ipv6);
         return ipv6;
     }
+
 
     public boolean isIpv4VipPortCombinationInUse(VirtualIp virtualIp, Integer loadBalancerPort) {
         return virtualIpRepository.getPorts(virtualIp.getId()).containsKey(loadBalancerPort);

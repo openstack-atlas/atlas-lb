@@ -23,14 +23,11 @@ public class VirtualIpv6 extends org.openstack.atlas.service.domain.entity.Entit
     @OneToMany(mappedBy = "virtualIp")
     private Set<LoadBalancerJoinVip6> loadBalancerJoinVip6Set = new HashSet<LoadBalancerJoinVip6>();
 
-    @ManyToOne
-    @JoinColumn(name = "cluster_id", nullable = true) // TODO: Should not be nullable. Need to get cluster internally
-    private Cluster cluster;
 
     @Column(name = "account_id", nullable = false)
     private Integer accountId;
 
-    @Column(name = "vip_octets", nullable = false)
+    @Column(name = "vip_octets", nullable = true)
     private Integer vipOctets;
 
     public Integer getVipOctets() {
@@ -57,19 +54,12 @@ public class VirtualIpv6 extends org.openstack.atlas.service.domain.entity.Entit
         this.loadBalancerJoinVip6Set = loadBalancerJoinVip6Set;
     }
 
-    public Cluster getCluster() {
-        return cluster;
-    }
-
-    public void setCluster(Cluster cluster) {
-        this.cluster = cluster;
-    }
 
     public String getDerivedIpString() throws IPStringConversionException1 {
         String out;
-        String clusterCidrString = this.getCluster().getClusterIpv6Cidr();
+        String clusterCidrString = "fd24:f480:ce44:91bc::/64";
         if (clusterCidrString == null) {
-            String msg = String.format("Cluster[%d] has null value for ClusterIpv6Cider", this.getCluster().getId());
+            String msg = String.format("Cluster has null value for ClusterIpv6Cider");
             throw new IPStringConversionException1(msg);
         }
         IPv6Cidr v6Cidr = new IPv6Cidr(clusterCidrString);

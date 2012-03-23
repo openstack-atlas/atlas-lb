@@ -428,7 +428,7 @@ public class NSAdapterUtils
 	{
         String resourceType = "loadbalancers";
         Integer resourceId = lbId;
-		String serviceUrl = config.getHost().getEndpoint();
+		String serviceUrl = "http://127.0.0.1/lbservice/v1";
         String resourceUrl = getLBURLStr(serviceUrl, accountId, resourceType, resourceId);
 
         String nsLB = performRequest("GET", resourceUrl, "");
@@ -442,7 +442,7 @@ public class NSAdapterUtils
         String resourceType = "loadbalancers";
         Integer resourceId = lbId;
         String childResourceType = "nodes";
-		String serviceUrl = config.getHost().getEndpoint();
+		String serviceUrl = "http://127.0.0.1/lbservice/v1";
         String resourceUrl = getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
         String nodesAsString = performRequest("GET", resourceUrl, "");

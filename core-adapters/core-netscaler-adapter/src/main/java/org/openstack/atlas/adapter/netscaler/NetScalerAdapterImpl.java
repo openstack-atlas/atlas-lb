@@ -48,7 +48,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         nsAdapterUtils.populateNSLoadBalancer(lb, nsLB);
 
         String requestBody = nsAdapterUtils.getRequestBody(nsLB); 
-        String serviceUrl = lb.getHost().getEndpoint();
+        String serviceUrl = "http://127.0.0.1/lbservice/v1";
         String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType);
 
         nsAdapterUtils.performRequest("POST", resourceUrl, requestBody);
@@ -67,7 +67,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         nsAdapterUtils.populateNSLoadBalancer(lb, nsLB);
         
 		String requestBody = nsAdapterUtils.getRequestBody(nsLB);
-		String serviceUrl = config.getHost().getEndpoint();
+		String serviceUrl = "http://127.0.0.1/lbservice/v1";
 		String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId);
 		nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
     }
@@ -81,7 +81,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         Integer accountId = lb.getAccountId(); 
         Integer lbId = lb.getId();   
  
-        String serviceUrl = config.getHost().getEndpoint();
+        String serviceUrl = "http://127.0.0.1/lbservice/v1";
         String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, lbId);
 
         nsAdapterUtils.performRequest("DELETE", resourceUrl);
@@ -100,7 +100,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
             com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Nodes nsNodes = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Nodes();
             nsAdapterUtils.populateNSNodes(nodes, nsNodes.getNodes());
             String requestBody = nsAdapterUtils.getRequestBody(nsNodes);
-            String serviceUrl = config.getHost().getEndpoint();
+            String serviceUrl = "http://127.0.0.1/lbservice/v1";
             String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 			
             nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
@@ -138,7 +138,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.ConnectionThrottle nsThrottle = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.ConnectionThrottle();
 		nsAdapterUtils.populateConnectionThrottle(conThrottle, nsThrottle);
         String requestBody = nsAdapterUtils.getRequestBody(nsThrottle);
-        String serviceUrl = config.getHost().getEndpoint();
+        String serviceUrl = "http://127.0.0.1/lbservice/v1";
         String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
         nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
@@ -152,7 +152,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         Integer resourceId = lbId;
         String childResourceType = "connectionthrottle";
 
-        String serviceUrl = config.getHost().getEndpoint();
+        String serviceUrl = "http://127.0.0.1/lbservice/v1";
         String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
         nsAdapterUtils.performRequest("DELETE", resourceUrl);
@@ -173,7 +173,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         nsAdapterUtils.populateNSHealthMonitor(monitor, nsMon);
 
         String requestBody = nsAdapterUtils.getRequestBody(nsMon);
-        String serviceUrl = config.getHost().getEndpoint();
+        String serviceUrl = "http://127.0.0.1/lbservice/v1";
         String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
         nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
@@ -187,7 +187,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         Integer resourceId = lbId;
         String childResourceType = "healthmonitor";
 
-        String serviceUrl = config.getHost().getEndpoint();
+        String serviceUrl = "http://127.0.0.1/lbservice/v1";
         String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
         nsAdapterUtils.performRequest("DELETE", resourceUrl);
@@ -204,7 +204,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.SessionPersistence nsPersistence = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.SessionPersistence();
 		nsAdapterUtils.populateSessionPersistence(sessionPersistence, nsPersistence);
         String requestBody = nsAdapterUtils.getRequestBody(nsPersistence);
-        String serviceUrl = config.getHost().getEndpoint();
+        String serviceUrl = "http://127.0.0.1/lbservice/v1";
         String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
         nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
@@ -218,7 +218,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         Integer resourceId = lbId;
         String childResourceType = "sessionpersistence";
 
-        String serviceUrl = config.getHost().getEndpoint();
+        String serviceUrl = "http://127.0.0.1/lbservice/v1";
         String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
         nsAdapterUtils.performRequest("DELETE", resourceUrl, "");
@@ -231,7 +231,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         String resourceType = "loadbalancers";
         Integer resourceId = lbId;
         String childResourceType = "nodes";
-		String serviceUrl = config.getHost().getEndpoint();
+		String serviceUrl = "http://127.0.0.1/lbservice/v1";
 		String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId,childResourceType) + "/" + nodeId;
 		
 		nsAdapterUtils.performRequest("DELETE", resourceUrl);

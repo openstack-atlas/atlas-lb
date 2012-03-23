@@ -97,7 +97,6 @@ public class LoadBalancerServiceImpl implements LoadBalancerService {
 
     protected void addDefaultValuesForCreate(final LoadBalancer loadBalancer) throws PersistenceServiceException {
         LoadBalancerDefaultBuilder.addDefaultValues(loadBalancer);
-        loadBalancer.setHost(hostService.getDefaultActiveHost());
         virtualIpService.assignVipsToLoadBalancer(loadBalancer);
     }
 

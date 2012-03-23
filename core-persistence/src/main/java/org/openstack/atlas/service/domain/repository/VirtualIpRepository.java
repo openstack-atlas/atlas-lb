@@ -21,9 +21,9 @@ public interface VirtualIpRepository {
 
     void deallocateVirtualIp(VirtualIp virtualIp);
 
-    VirtualIp allocateIpv4VipBeforeDate(Cluster cluster, Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException;
+    VirtualIp allocateIpv4VipBeforeDate(Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException;
 
-    VirtualIp allocateIpv4VipAfterDate(Cluster cluster, Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException;
+    VirtualIp allocateIpv4VipAfterDate(Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException;
 
     Map<Integer, List<LoadBalancer>> getPorts(Integer vid);
 }

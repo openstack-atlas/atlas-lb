@@ -329,7 +329,6 @@ public class StubFactory {
         VirtualIpv6 virtualIpv6 = new VirtualIpv6();
         virtualIpv6.setAccountId(loadBalancer.getAccountId());
         virtualIpv6.setVipOctets(1);
-        virtualIpv6.setCluster(createdHydratedCluster());
 
         return new LoadBalancerJoinVip6(LOAD_BALANCER_PORT, loadBalancer, virtualIpv6);
     }
@@ -356,7 +355,6 @@ public class StubFactory {
         VirtualIp virtualIp = new VirtualIp();
         virtualIp.setId(VIP1_ID);
         virtualIp.setAddress(VIP1_ADDRESS);
-        virtualIp.setCluster(createdHydratedCluster());
         virtualIp.setVipType(VirtualIpType.valueOf(VIP1_TYPE));
         return virtualIp;
     }
