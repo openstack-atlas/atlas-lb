@@ -14,22 +14,33 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.openstack.atlas.adapter.common.config.LoadBalancerEndpointConfiguration;
+
 import org.openstack.atlas.adapter.common.entity.Cluster;
 import org.openstack.atlas.adapter.common.entity.VirtualIpCluster;
+import org.openstack.atlas.adapter.common.entity.VirtualIpv6Octets;
+
 import org.openstack.atlas.adapter.common.service.AdapterVirtualIpService;
+import org.openstack.atlas.adapter.common.repository.AdapterVirtualIpRepository;
+
 import org.openstack.atlas.adapter.exception.*;
 import org.openstack.atlas.common.ip.IPv6;
 import org.openstack.atlas.service.domain.entity.*;
-import org.springframework.stereotype.Service;
 
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class NSAdapterUtils
 {
     public static Log LOG = LogFactory.getLog(NSAdapterUtils.class.getName());
 
+    @Autowired
     private AdapterVirtualIpService adapterVirtualIpService;
 
+    @Autowired
+    private AdapterVirtualIpRepository adapterVirtualIpRepository;
+    
+    
     public String getLBURLStr(String serviceUrl, Integer accountId, String resourceType)
     {
     	String resourceUrl = serviceUrl + "/" + accountId + "/" + resourceType;
@@ -319,7 +330,10 @@ public class NSAdapterUtils
                 VirtualIpv6 virtualIpv6 = lbjoinVip.getVirtualIp();
                 VirtualIpCluster vipCluster = adapterVirtualIpService.getVirtualIpCluster(vip.getId());
                 Cluster cluster = vipCluster.getCluster();
-                String vipAddress = IPv6.getDerivedIpString(cluster.getClusterIpv6Cidr(), cluster.getId(), virtualIpv6.getAccountId(), virtualIpv6.getVipOctets());
+                Integer vip6Id = virtualIpv6.getId();
+                VirtualIpv6Octets ipv6Octets = adapterVirtualIpRepository.getVirtualIpv6VipOctet(vip6Id);
+                Integer vipoctets = ipv6Octets.getVipOctets();
+                String vipAddress = ipv6Octets.getDerivedIpString(cluster);
 
                 if (vipAddress == null)
                 {

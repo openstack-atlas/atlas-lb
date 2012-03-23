@@ -11,8 +11,8 @@ import java.util.List;
         name = "vendor",
         discriminatorType = DiscriminatorType.STRING
 )
-@DiscriminatorValue("CORE")
-@Table(name = "host")
+@DiscriminatorValue("ADAPTER")
+@Table(name = "adapter_host")
 public class Host extends org.openstack.atlas.service.domain.entity.Entity implements Serializable {
     private final static long serialVersionUID = 532512316L;
 

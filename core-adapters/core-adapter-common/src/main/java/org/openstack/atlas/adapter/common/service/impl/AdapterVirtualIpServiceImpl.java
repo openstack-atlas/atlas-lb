@@ -131,18 +131,23 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
         // Acquire lock on account row due to concurrency issue
         virtualIpv6Repository.getLockedAccountRecord(loadBalancer.getAccountId());
 
-        Integer vipOctets = virtualIpv6Repository.getNextVipOctet(loadBalancer.getAccountId());
+        Integer vipOctets = adapterVirtualIpRepository.getNextVipOctet(loadBalancer.getAccountId());
 
         LoadBalancerHost lbHost = hostRepository.getLBHost(loadBalancer.getId());
         Host host = lbHost.getHost();
         Cluster c = clusterRepository.getById(host.getCluster().getId());
 
         VirtualIpv6 ipv6 = new VirtualIpv6();
-
-        ipv6.setAccountId(loadBalancer.getAccountId());
-        ipv6.setVipOctets(vipOctets);
+        ipv6.setAccountId(loadBalancer.getAccountId());  
         virtualIpRepository.persist(ipv6);
 
+        VirtualIpv6Octets ipv6octets = new VirtualIpv6Octets();
+
+        ipv6octets.setAccountId(loadBalancer.getAccountId());
+        ipv6octets.setVipOctets(vipOctets);
+        ipv6octets.setVirtualIpv6Id(ipv6.getId());
+        virtualIpRepository.persist(ipv6octets);
+                
         VirtualIpCluster vipCluster = new VirtualIpCluster(ipv6.getId(), c);
 
         adapterVirtualIpRepository.createVirtualIpCluster(vipCluster);

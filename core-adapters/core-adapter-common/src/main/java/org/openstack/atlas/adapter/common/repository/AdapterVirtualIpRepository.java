@@ -9,6 +9,7 @@ import org.openstack.atlas.adapter.common.entity.*;
 import org.openstack.atlas.service.domain.entity.VirtualIp;
 import org.openstack.atlas.service.domain.entity.VirtualIp_;
 import org.openstack.atlas.service.domain.exception.OutOfVipsException;
+import org.openstack.atlas.service.domain.exception.ServiceUnavailableException;
 
 
 import org.openstack.atlas.adapter.common.entity.Cluster;
@@ -24,7 +25,9 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.PersistenceException;
 import java.util.*;
+
 
 @Repository
 @Transactional
@@ -158,6 +161,18 @@ public class AdapterVirtualIpRepository  {
         return results.get(0);
     }
 
+    public VirtualIpv6Octets getVirtualIpv6VipOctet(Integer vipId) {
+        String hqlStr = "from VirtualIpv6Octets vip where vip.virtualIpv6Id = :vipId";
+        Query query = entityManager.createQuery(hqlStr).setParameter("vipId", vipId).setMaxResults(1);
+        List<VirtualIpv6Octets> results = query.getResultList();
+        if (results.size() < 1) {
+            LOG.error(String.format("Error no VirtualIpv6Octets found with id %d.", vipId));
+            return null;
+        }
+        return results.get(0);
+    }
+    
+    
     public VirtualIpCluster createVirtualIpCluster(VirtualIpCluster vipCluster)
     {
         LOG.info("Create/Update a VirtualIpCluster " + vipCluster.getId() + "...");
@@ -165,4 +180,40 @@ public class AdapterVirtualIpRepository  {
 
         return dbVipCluster;
     }
+
+ 
+    
+    public Integer getNextVipOctet(Integer accountId) {
+        List<Integer> maxList;
+        Integer max;
+        int retry_count = 3;
+
+        String qStr = "SELECT max(v.vipOctets) from VirtualIpv6Octets v where v.accountId=:aid";
+
+        while (retry_count > 0) {
+            retry_count--;
+            try {
+                maxList = entityManager.createQuery(qStr).setLockMode(LockModeType.PESSIMISTIC_WRITE).setParameter("aid", accountId).getResultList();
+                max = maxList.get(0);
+                if (max == null) {
+                    max = 0;
+                }
+                max++; // The next VipOctet
+                return max;
+            } catch (PersistenceException e) {
+                LOG.warn(String.format("Deadlock detected. %d retries left.", retry_count));
+                if (retry_count <= 0) throw e;
+
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+
+        throw new ServiceUnavailableException("Too many create requests received. Please try again in a few moments.");
+    }
+
+    
 }

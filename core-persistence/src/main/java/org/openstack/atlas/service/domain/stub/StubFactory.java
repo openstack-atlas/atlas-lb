@@ -333,18 +333,6 @@ public class StubFactory {
         return new LoadBalancerJoinVip6(LOAD_BALANCER_PORT, loadBalancer, virtualIpv6);
     }
 
-    public static Cluster createdHydratedCluster() {
-        Cluster cluster = new Cluster();
-        cluster.setId(1);
-        cluster.setName("test");
-        cluster.setDescription("test");
-        cluster.setClusterIpv6Cidr("fd24:f480:ce44:91bc::/64");
-        cluster.setUsername("username");
-        cluster.setPassword("0d1131d28d76ba0a72f42f819d207c94");
-
-        return cluster;
-    }
-
     public static LoadBalancerJoinVip createHydratedLoadBalancerJoinVip() {
         LoadBalancer loadBalancer = createHydratedDomainLoadBalancer();
         VirtualIp virtualIp = createHydratedDomainVirtualIp();

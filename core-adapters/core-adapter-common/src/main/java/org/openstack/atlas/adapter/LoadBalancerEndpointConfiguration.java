@@ -1,6 +1,6 @@
 package org.openstack.atlas.adapter;
 
-import org.openstack.atlas.service.domain.entity.Host;
+import org.openstack.atlas.adapter.common.entity.Host;
 
 import java.net.MalformedURLException;
 import java.net.URL;

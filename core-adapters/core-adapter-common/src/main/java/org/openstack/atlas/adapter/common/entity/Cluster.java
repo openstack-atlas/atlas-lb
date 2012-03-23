@@ -13,8 +13,8 @@ import java.util.Set;
         name = "vendor",
         discriminatorType = DiscriminatorType.STRING
 )
-@DiscriminatorValue("CORE")
-@Table(name = "cluster")
+@DiscriminatorValue("ADAPTER")
+@Table(name = "adapter_cluster")
 public class Cluster extends org.openstack.atlas.service.domain.entity.Entity implements Serializable {
     private final static long serialVersionUID = 532512316L;
 

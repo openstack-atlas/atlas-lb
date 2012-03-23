@@ -29,8 +29,6 @@ public class LoadBalancerServiceImpl implements LoadBalancerService {
     @Autowired
     protected BlacklistService blacklistService;
 
-    @Autowired
-    protected HostService hostService;
 
     @Autowired
     protected LoadBalancerRepository loadBalancerRepository;
