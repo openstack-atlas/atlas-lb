@@ -1,17 +1,10 @@
 package org.openstack.atlas.adapter.netscaler;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
+
 import java.net.URL;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+
 import java.util.Map;
 
 import org.apache.commons.logging.Log;

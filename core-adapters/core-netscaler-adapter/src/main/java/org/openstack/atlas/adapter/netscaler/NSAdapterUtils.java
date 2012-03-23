@@ -2,7 +2,6 @@ package org.openstack.atlas.adapter.netscaler;
 
 import java.util.*;
 import java.io.*;
-import java.net.*;
 
 
 import javax.xml.bind.JAXBContext;
@@ -14,9 +13,13 @@ import javax.xml.transform.stream.StreamSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.openstack.atlas.adapter.common.config.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.common.entity.Cluster;
+import org.openstack.atlas.adapter.common.entity.VirtualIpCluster;
+import org.openstack.atlas.adapter.common.service.AdapterVirtualIpService;
 import org.openstack.atlas.adapter.exception.*;
+import org.openstack.atlas.common.ip.IPv6;
 import org.openstack.atlas.service.domain.entity.*;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
 import org.springframework.stereotype.Service;
 
 
@@ -24,6 +27,8 @@ import org.springframework.stereotype.Service;
 public class NSAdapterUtils
 {
     public static Log LOG = LogFactory.getLog(NSAdapterUtils.class.getName());
+
+    private AdapterVirtualIpService adapterVirtualIpService;
 
     public String getLBURLStr(String serviceUrl, Integer accountId, String resourceType)
     {
@@ -101,7 +106,7 @@ public class NSAdapterUtils
 	 	
         try 
         {
-			JAXBContext ctxt = JAXBContext.newInstance("com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1");
+			JAXBContext ctxt = JAXBContext.newInstance("com.citrix.cloud.org.openstack.atlas.adapter.temp.atlas.docs.loadbalancers.api.v1");
 			Unmarshaller  u = ctxt.createUnmarshaller() ; 
 			return u.unmarshal( new StreamSource( new StringReader( response) ) );
 		} 
@@ -121,7 +126,7 @@ public class NSAdapterUtils
 	 	
         try 
         {
-            JAXBContext ctxt = JAXBContext.newInstance("com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1");
+            JAXBContext ctxt = JAXBContext.newInstance("com.citrix.cloud.org.openstack.atlas.adapter.temp.atlas.docs.loadbalancers.api.v1");
             Marshaller m = ctxt.createMarshaller() ; 
             m.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             Writer writer = new StringWriter();
@@ -311,7 +316,11 @@ public class NSAdapterUtils
 		    nsVIP.setType(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIpType.PUBLIC);
 
             try {
-                String vipAddress = vip.getDerivedIpString();
+                VirtualIpv6 virtualIpv6 = lbjoinVip.getVirtualIp();
+                VirtualIpCluster vipCluster = adapterVirtualIpService.getVirtualIpCluster(vip.getId());
+                Cluster cluster = vipCluster.getCluster();
+                String vipAddress = IPv6.getDerivedIpString(cluster.getClusterIpv6Cidr(), cluster.getId(), virtualIpv6.getAccountId(), virtualIpv6.getVipOctets());
+
                 if (vipAddress == null)
                 {
                     throw new BadRequestException("Missing attributes [ipAddress] from virtualIp....", new Error());
@@ -428,7 +437,9 @@ public class NSAdapterUtils
 	{
         String resourceType = "loadbalancers";
         Integer resourceId = lbId;
-		String serviceUrl = "http://127.0.0.1/lbservice/v1";
+
+
+		String serviceUrl = config.getHost().getEndpoint();
         String resourceUrl = getLBURLStr(serviceUrl, accountId, resourceType, resourceId);
 
         String nsLB = performRequest("GET", resourceUrl, "");
@@ -442,7 +453,7 @@ public class NSAdapterUtils
         String resourceType = "loadbalancers";
         Integer resourceId = lbId;
         String childResourceType = "nodes";
-		String serviceUrl = "http://127.0.0.1/lbservice/v1";
+		String serviceUrl = config.getHost().getEndpoint();
         String resourceUrl = getLBURLStr(serviceUrl, accountId, resourceType, resourceId, childResourceType);
 
         String nodesAsString = performRequest("GET", resourceUrl, "");

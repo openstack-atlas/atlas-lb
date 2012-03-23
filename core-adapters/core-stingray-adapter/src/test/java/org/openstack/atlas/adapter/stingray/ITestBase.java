@@ -4,7 +4,6 @@ import com.riverbed.stingray.service.client.*;
 import org.apache.axis.AxisFault;
 import org.junit.Assert;
 import org.openstack.atlas.adapter.LoadBalancerAdapter;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
 import org.openstack.atlas.adapter.exception.BadRequestException;
 import org.openstack.atlas.adapter.stingray.helper.IpHelper;
 import org.openstack.atlas.adapter.stingray.helper.StingrayNameHelper;

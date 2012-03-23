@@ -4,7 +4,6 @@ import com.zxtm.service.client.*;
 import org.apache.axis.AxisFault;
 import org.junit.Assert;
 import org.openstack.atlas.adapter.LoadBalancerAdapter;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
 import org.openstack.atlas.adapter.exception.BadRequestException;
 import org.openstack.atlas.adapter.zxtm.helper.IpHelper;
 import org.openstack.atlas.adapter.zxtm.helper.ZxtmNameHelper;

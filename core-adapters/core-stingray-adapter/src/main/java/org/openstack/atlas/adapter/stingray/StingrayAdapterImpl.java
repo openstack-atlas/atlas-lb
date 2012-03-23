@@ -6,7 +6,6 @@ import org.apache.axis.types.UnsignedInt;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openstack.atlas.adapter.LoadBalancerAdapter;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
 import org.openstack.atlas.adapter.exception.AdapterException;
 import org.openstack.atlas.adapter.exception.BadRequestException;
 import org.openstack.atlas.adapter.exception.RollbackException;
@@ -20,7 +19,6 @@ import org.openstack.atlas.datamodel.CorePersistenceType;
 import org.openstack.atlas.datamodel.CoreProtocolType;
 import org.openstack.atlas.service.domain.entity.*;
 import org.springframework.stereotype.Service;
-import org.springframework.context.annotation.Primary;
 
 import java.rmi.RemoteException;
 import java.util.*;

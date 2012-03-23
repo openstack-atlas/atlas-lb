@@ -3,14 +3,12 @@ package org.openstack.atlas.adapter.stingray;
 import org.apache.axis.AxisFault;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
 import org.openstack.atlas.adapter.UsageAdapter;
 import org.openstack.atlas.adapter.exception.AdapterException;
 import org.openstack.atlas.adapter.exception.BadRequestException;
 import org.openstack.atlas.adapter.stingray.helper.StingrayNameHelper;
 import org.openstack.atlas.adapter.stingray.service.StingrayServiceStubs;
 import org.openstack.atlas.service.domain.entity.LoadBalancer;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.rmi.RemoteException;
