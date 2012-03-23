@@ -328,7 +328,7 @@ public class StubFactory {
         LoadBalancer loadBalancer = createHydratedDomainLoadBalancer();
         VirtualIpv6 virtualIpv6 = new VirtualIpv6();
         virtualIpv6.setAccountId(loadBalancer.getAccountId());
-        virtualIpv6.setVipOctets(1);
+
 
         return new LoadBalancerJoinVip6(LOAD_BALANCER_PORT, loadBalancer, virtualIpv6);
     }

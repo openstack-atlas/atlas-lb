@@ -22,14 +22,6 @@ public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity 
     
     @Column(name = "account_id", nullable = false)
     private Integer accountId;
-    
-    public Integer getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(Integer accountId) {
-        this.accountId = accountId;
-    }
         
     @Column(name = "address", length = 39, unique = true, nullable = true)
     private String address;
@@ -38,17 +30,6 @@ public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity 
     @Column(name = "type")
     private VirtualIpType vipType;
 
-
-    @Column(name = "last_deallocation")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Calendar lastDeallocation;
-
-    @Column(name = "last_allocation")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Calendar lastAllocation;
-
-    @Column(name = "is_allocated", nullable = false)
-    private Boolean isAllocated = false;
 
     public Set<LoadBalancerJoinVip> getLoadBalancerJoinVipSet() {
         if(loadBalancerJoinVipSet == null) loadBalancerJoinVipSet = new HashSet<LoadBalancerJoinVip>();
@@ -59,6 +40,14 @@ public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity 
         this.loadBalancerJoinVipSet = loadBalancerJoinVipSet;
     }
 
+    public Integer getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(Integer accountId) {
+        this.accountId = accountId;
+    }
+    
     public String getAddress() {
         return address;
     }
@@ -75,40 +64,12 @@ public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity 
         this.vipType = vipType;
     }
 
-
-    public Calendar getLastDeallocation() {
-        return lastDeallocation;
-    }
-
-    public void setLastDeallocation(Calendar lastDeallocation) {
-        this.lastDeallocation = lastDeallocation;
-    }
-
-    public Calendar getLastAllocation() {
-        return lastAllocation;
-    }
-
-    public void setLastAllocation(Calendar lastAllocation) {
-        this.lastAllocation = lastAllocation;
-    }
-
-    public Boolean isAllocated() {
-        return isAllocated;
-    }
-
-    public void setAllocated(Boolean allocated) {
-        isAllocated = allocated;
-    }
-
     @Override
     public String toString() {
         return "VirtualIp{" +
                 "loadBalancerJoinVipSet=" + loadBalancerJoinVipSet +
                 ", ipAddress='" + address + '\'' +
                 ", vipType=" + vipType +
-                ", lastDeallocation=" + lastDeallocation +
-                ", lastAllocation=" + lastAllocation +
-                ", isAllocated=" + isAllocated +
                 '}';
     }
 }

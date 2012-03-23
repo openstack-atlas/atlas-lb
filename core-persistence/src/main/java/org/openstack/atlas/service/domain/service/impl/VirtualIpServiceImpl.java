@@ -222,31 +222,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
         }
         return sharedVips;
     }
-
-    /*
-    @Transactional
-    public VirtualIp allocateIpv4VirtualIp(VirtualIp virtualIp) throws OutOfVipsException {
-        Calendar timeConstraintForVipReuse = Calendar.getInstance();
-        timeConstraintForVipReuse.add(Calendar.DATE, -Constants.NUM_DAYS_BEFORE_VIP_REUSE);
-
-        if (virtualIp.getVipType() == null) {
-            virtualIp.setVipType(VirtualIpType.PUBLIC);
-        }
-
-        try {
-            return virtualIpRepository.allocateIpv4VipBeforeDate(timeConstraintForVipReuse, virtualIp.getVipType());
-        } catch (OutOfVipsException e) {
-            LOG.warn(String.format("Out of IPv4 virtual ips that were de-allocated before '%s'.", timeConstraintForVipReuse.getTime()));
-            try {
-                return virtualIpRepository.allocateIpv4VipAfterDate(timeConstraintForVipReuse, virtualIp.getVipType());
-            } catch (OutOfVipsException e2) {
-                e2.printStackTrace();
-                throw e2;
-            }
-        }
-    }
-    */
-    
+   
     @Transactional
     public VirtualIp allocateIpv4VirtualIp(LoadBalancer loadBalancer) throws EntityNotFoundException {
         // Acquire lock on account row due to concurrency issue
@@ -267,7 +243,6 @@ public class VirtualIpServiceImpl implements VirtualIpService {
         LOG.debug("Entered allocateIpv6VirtualIp");
         virtualIpv6Repository.getLockedAccountRecord(loadBalancer.getAccountId());
         LOG.debug("In allocateIpv6VirtualIp(): after call to virtualIpv6Repository.getLockedAccountRecord");
-        //Integer vipOctets = virtualIpv6Repository.getNextVipOctet(loadBalancer.getAccountId());
 
         VirtualIpv6 ipv6 = new VirtualIpv6();
         ipv6.setAccountId(loadBalancer.getAccountId());

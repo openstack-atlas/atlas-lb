@@ -68,60 +68,10 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
     @Override
     public void deallocateVirtualIp(VirtualIp virtualIp) {
         virtualIp = entityManager.find(VirtualIp.class, virtualIp.getId());
-        virtualIp.setAllocated(false);
-        virtualIp.setLastDeallocation(Calendar.getInstance());
         entityManager.merge(virtualIp);
         LOG.info(String.format("Virtual Ip '%d' de-allocated.", virtualIp.getId()));
     }
 
-    @Override
-    public VirtualIp allocateIpv4VipBeforeDate(Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException {
-        VirtualIp vipCandidate;
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<VirtualIp> criteria = builder.createQuery(VirtualIp.class);
-        Root<VirtualIp> vipRoot = criteria.from(VirtualIp.class);
-
-        Predicate isVipType = builder.equal(vipRoot.get(VirtualIp_.vipType), vipType);
-
-
-        criteria.select(vipRoot);
-        criteria.where(builder.and(isVipType));
-
-        try {
-            vipCandidate = entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).setMaxResults(1).getSingleResult();
-        } catch (Exception e) {
-            LOG.error(e);
-            throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
-        }
-
-
-        entityManager.merge(vipCandidate);
-        return vipCandidate;
-    }
-
-    @Override
-    public VirtualIp allocateIpv4VipAfterDate(Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException {
-        VirtualIp vipCandidate;
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<VirtualIp> criteria = builder.createQuery(VirtualIp.class);
-        Root<VirtualIp> vipRoot = criteria.from(VirtualIp.class);
-
-        Predicate isVipType = builder.equal(vipRoot.get(VirtualIp_.vipType), vipType);
-
-
-        criteria.select(vipRoot);
-        criteria.where(isVipType);
-
-        try {
-            vipCandidate = entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).setMaxResults(1).getSingleResult();
-        } catch (Exception e) {
-            LOG.error(e);
-            throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
-        }
-
-        entityManager.merge(vipCandidate);
-        return vipCandidate;
-    }
 
     @Override
     public Map<Integer, List<LoadBalancer>> getPorts(Integer vid) {

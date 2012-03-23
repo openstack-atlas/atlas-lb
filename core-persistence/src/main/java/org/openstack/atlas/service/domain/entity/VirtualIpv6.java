@@ -26,28 +26,8 @@ public class VirtualIpv6 extends org.openstack.atlas.service.domain.entity.Entit
     @Column(name = "account_id", nullable = false)
     private Integer accountId;
 
-    @Column(name = "vip_octets", nullable = true)
-    private Integer vipOctets;
-
     @Column(name = "address", length = 64, unique = true, nullable = true)
     private String address;
-
-    public Integer getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(Integer accountId) {
-        this.accountId = accountId;
-    }
-
-    
-    public Integer getVipOctets() {
-        return vipOctets;
-    }
-
-    public void setVipOctets(Integer vipOctets) {
-        this.vipOctets = vipOctets;
-    }
 
 
     public Set<LoadBalancerJoinVip6> getLoadBalancerJoinVip6Set() {
@@ -58,6 +38,14 @@ public class VirtualIpv6 extends org.openstack.atlas.service.domain.entity.Entit
         this.loadBalancerJoinVip6Set = loadBalancerJoinVip6Set;
     }
 
+    public Integer getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(Integer accountId) {
+        this.accountId = accountId;
+    }
+    
     public String getAddress() {
         return address;
     }
@@ -77,7 +65,7 @@ public class VirtualIpv6 extends org.openstack.atlas.service.domain.entity.Entit
         IPv6 v6 = new IPv6("::");
         v6.setClusterPartition(v6Cidr);
         v6.setAccountPartition(this.getAccountId());
-        v6.setVipOctets(this.getVipOctets());
+        //v6.setVipOctets(this.getVipOctets());
         out = v6.expand();
         return out;
     }
