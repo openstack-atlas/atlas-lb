@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>core-netscaler-adapter</artifactId>
-    <name>Openstack :: Atlas :: Core :: Adapter :: NetScaler </name>
+    <name>Openstack :: Atlas :: Core :: Adapters :: NetScaler </name>
 
     <packaging>jar</packaging>
 
