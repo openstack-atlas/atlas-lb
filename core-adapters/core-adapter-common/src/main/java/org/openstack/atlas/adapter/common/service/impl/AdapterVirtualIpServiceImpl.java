@@ -14,8 +14,8 @@ import org.openstack.atlas.service.domain.exception.*;
 
 import org.openstack.atlas.adapter.common.service.AdapterVirtualIpService;
 
-import org.openstack.atlas.adapter.common.repository.HostRepository;
-import org.openstack.atlas.adapter.common.repository.ClusterRepository;
+import org.openstack.atlas.adapter.common.repository.AdapterHostRepository;
+import org.openstack.atlas.adapter.common.repository.AdapterClusterRepository;
 import org.openstack.atlas.adapter.common.repository.AdapterVirtualIpRepository;
 
 import org.openstack.atlas.service.domain.repository.VirtualIpRepository;
@@ -54,10 +54,10 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
     protected VirtualIpv6Repository virtualIpv6Repository;
 
     @Autowired
-    protected ClusterRepository clusterRepository;
+    protected AdapterClusterRepository clusterRepository;
 
     @Autowired
-    protected HostRepository hostRepository;
+    protected AdapterHostRepository hostRepository;
 
 
     @Override

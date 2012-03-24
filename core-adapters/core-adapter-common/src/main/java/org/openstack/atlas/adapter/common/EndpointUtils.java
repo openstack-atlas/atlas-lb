@@ -18,8 +18,8 @@ import org.openstack.atlas.adapter.exception.AdapterException;
 import org.openstack.atlas.adapter.common.entity.Cluster;
 import org.openstack.atlas.adapter.common.entity.Host;
 
-import org.openstack.atlas.adapter.common.repository.ClusterRepository;
-import org.openstack.atlas.adapter.common.repository.HostRepository;
+import org.openstack.atlas.adapter.common.repository.AdapterClusterRepository;
+import org.openstack.atlas.adapter.common.repository.AdapterHostRepository;
 import org.openstack.atlas.common.config.Configuration;
 import org.openstack.atlas.common.crypto.CryptoUtil;
 import org.openstack.atlas.common.crypto.exception.DecryptException;
@@ -40,10 +40,10 @@ public class EndpointUtils {
     @Autowired
     protected static LoadBalancerRepository loadBalancerRepository;
     @Autowired
-    protected static HostRepository hostRepository;
+    protected static AdapterHostRepository hostRepository;
 
     @Autowired
-    protected static ClusterRepository clusterRepository;
+    protected static AdapterClusterRepository clusterRepository;
 
     public static LoadBalancerEndpointConfiguration getConfigbyLoadBalancerId(Integer lbId)  {
         try {

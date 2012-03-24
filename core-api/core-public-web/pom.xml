@@ -33,13 +33,13 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>core-zxtm-adapter</artifactId>
             <version>${project.version}</version>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>core-netscaler-adapter</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!--<dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>atlas-rax-api</artifactId>
             <version>${project.version}</version>
