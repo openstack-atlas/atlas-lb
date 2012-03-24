@@ -30,10 +30,15 @@
             <artifactId>core-adapter-common</artifactId>
             <version>${project.version}</version>
         </dependency>
-
+        <!--
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>core-null-adapter</artifactId>
+            <version>${project.version}</version>
+        </dependency>-->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>core-adapter-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <!--<dependency>

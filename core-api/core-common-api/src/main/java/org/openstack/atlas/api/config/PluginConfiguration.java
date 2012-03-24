@@ -45,9 +45,10 @@ public class PluginConfiguration {
         List<String> contexts = new ArrayList<String>();
         contexts.add("api-context.xml");
         contexts.add("persistence-context.xml");
+        contexts.add("adapter-persistence-context.xml");      
         contexts.add("data-model-context.xml");
         //contexts.add("dozer-context.xml");
-        contexts.add(adapterName + "-adapter-context.xml");
+        contexts.add(adapterName + "-adapter-context.xml");        
         validateCoreContexts(contexts);
         return contexts;
     }

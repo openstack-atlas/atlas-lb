@@ -10,18 +10,18 @@
        http://www.springframework.org/schema/tx
        http://www.springframework.org/schema/tx/spring-tx-2.5.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd">
 
-    <context:component-scan base-package="org.openstack.atlas.adapter"/>
+    <context:component-scan base-package="org.openstack.atlas.adapter.common"/>
     <context:annotation-config/>
 
     <bean id="entityManagerFactory2" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="persistenceXmlLocation" value="classpath:META-INF/adapter-persistence.xml"/>
         <property name="persistenceUnitName" value="loadbalancingadapter"/>
-        <property name="dataSource" ref="adapterLoadBalancingDataSource"/>
+        <property name="dataSource" ref="loadBalancingAdapterDataSource"/>
     </bean>
 
-    <bean id="adapterLoadBalancingDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" >
+    <bean id="loadBalancingAdapterDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" >
         <property name="driverClassName" value="${database.driver.class.name}"/>
-        <property name="url" value="${database.url}"/>
+        <property name="url" value="${database.adapter.url}"/>
         <property name="username" value="${database.username}"/>
         <property name="password" value="${database.password}"/>
         <property name="maxActive" value="${database.pool.connections.max.active}"/>
@@ -29,21 +29,13 @@
         <property name="minIdle" value="${database.pool.connections.min.idle}"/>
         <property name="validationQuery" value="SELECT 1"/>
     </bean>
-
-
-   <!-- <bean id="loadbalancingDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-        <property name="driverClassName" value="${database.driver.class.name}"/>
-        <property name="url" value="${database.url}"/>
-        <property name="username" value="${database.username}"/>
-        <property name="password" value="${database.password}"/>
-    </bean>-->
-
-    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        
+    <bean id="transactionManager2" class="org.springframework.orm.jpa.JpaTransactionManager">
         <property name="entityManagerFactory" ref="entityManagerFactory2"/>
     </bean>
-
+    
     <tx:annotation-driven/>
     <bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>
-
+    
 </beans>
 

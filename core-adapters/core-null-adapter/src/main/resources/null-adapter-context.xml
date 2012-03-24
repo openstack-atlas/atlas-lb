@@ -14,5 +14,6 @@
     <context:component-scan base-package="org.openstack.atlas.adapter.common"/>    
     <context:annotation-config/>
 
+
 </beans>
 
