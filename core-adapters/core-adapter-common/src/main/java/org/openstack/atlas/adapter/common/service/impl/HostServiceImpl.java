@@ -5,8 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.openstack.atlas.adapter.common.entity.Host;
 import org.openstack.atlas.adapter.common.entity.LoadBalancerHost;
 import org.openstack.atlas.service.domain.exception.PersistenceServiceException;
-import org.openstack.atlas.adapter.common.repository.AdapterHostRepository;
-import org.openstack.atlas.adapter.common.service.AdapterHostService;
+import org.openstack.atlas.adapter.common.repository.HostRepository;
+import org.openstack.atlas.adapter.common.service.HostService;
 import org.openstack.atlas.service.domain.service.impl.HealthMonitorServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,11 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class AdapterHostServiceImpl implements AdapterHostService {
-    private final Log LOG = LogFactory.getLog(HealthMonitorServiceImpl.class);
+public class HostServiceImpl implements HostService {
+    private final Log LOG = LogFactory.getLog(HostServiceImpl.class);
 
     @Autowired
-    private AdapterHostRepository hostRepository;
+    private HostRepository hostRepository;
 
 
     @Override

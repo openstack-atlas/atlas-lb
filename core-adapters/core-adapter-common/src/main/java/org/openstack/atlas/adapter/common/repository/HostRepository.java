@@ -17,10 +17,10 @@ import java.util.List;
 
 @Repository
 @Transactional
-public class AdapterHostRepository {
+public class HostRepository {
 
-    final Log LOG = LogFactory.getLog(AdapterHostRepository.class);
-    @PersistenceContext(unitName = "loadbalancing")
+    final Log LOG = LogFactory.getLog(HostRepository.class);
+    @PersistenceContext(unitName = "loadbalancingadapter")
     private EntityManager entityManager;
 
 //    public Host getById(Integer id) throws EntityNotFoundException {

@@ -13,10 +13,10 @@ import javax.persistence.PersistenceContext;
 
 @Repository
 @Transactional
-public class AdapterClusterRepository {
+public class ClusterRepository {
 
-    final Log LOG = LogFactory.getLog(AdapterClusterRepository.class);
-    @PersistenceContext(unitName = "loadbalancing")
+    final Log LOG = LogFactory.getLog(ClusterRepository.class);
+    @PersistenceContext(unitName = "loadbalancingadapter")
     private EntityManager entityManager;
 
     public Cluster getById(Integer id) throws EntityNotFoundException {
