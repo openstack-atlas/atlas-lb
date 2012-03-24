@@ -44,13 +44,20 @@ public class PluginConfiguration {
     public static List<String> getCoreContexts(String adapterName) {
         List<String> contexts = new ArrayList<String>();
         contexts.add("api-context.xml");
-        contexts.add("persistence-context.xml");
-        contexts.add("adapter-persistence-context.xml");      
+        contexts.add("persistence-context.xml");    
         contexts.add("data-model-context.xml");
         //contexts.add("dozer-context.xml");
         contexts.add(adapterName + "-adapter-context.xml");        
         validateCoreContexts(contexts);
-        return contexts;
+        List<String> optional_contexts = new ArrayList<String>();
+        // The adapter layer may have a persistence layer or not.
+        optional_contexts.add("adapter-persistence-context.xml");  
+        validateOptionalContexts(optional_contexts);
+        List<String> core_contexts = new ArrayList<String>(contexts);
+        core_contexts.addAll(optional_contexts);
+    
+        
+        return core_contexts;
     }
 
     /**
@@ -63,7 +70,7 @@ public class PluginConfiguration {
         for (String context : coreContexts) {
             extensionContexts.add(extensionName + "-" + context);
         }
-        validateExtensionContexts(extensionContexts);
+        validateOptionalContexts(extensionContexts);
         return extensionContexts;
     }
 
@@ -83,7 +90,7 @@ public class PluginConfiguration {
     /**
      *
      */
-    public static void validateExtensionContexts(List<String> contexts) {
+    public static void validateOptionalContexts(List<String> contexts) {
         for (String context : contexts) {
             if (!doesContextExist(context)) {
                 LOG.warn("Could not find the configuration file " + context + ". Quietly ignoring it .....");
