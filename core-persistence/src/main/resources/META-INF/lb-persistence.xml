@@ -34,7 +34,7 @@
                       value="org.hibernate.transaction.SunONETransactionManagerLookup"/>-->
             <property name="hibernate.transaction.flush_before_completion" value="false"/>
             <property name="hibernate.connection.autocommit" value="false"/>
-            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.connection.release_mode" value="auto"/>
             <property name="hibernate.hbm2ddl.auto" value="update"/>
         </properties>

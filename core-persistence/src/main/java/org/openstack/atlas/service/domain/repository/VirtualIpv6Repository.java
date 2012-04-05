@@ -1,15 +1,14 @@
 package org.openstack.atlas.service.domain.repository;
 
-import org.openstack.atlas.service.domain.entity.Account;
-import org.openstack.atlas.service.domain.entity.LoadBalancer;
-import org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip6;
-import org.openstack.atlas.service.domain.entity.VirtualIpv6;
+import org.openstack.atlas.service.domain.entity.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public interface VirtualIpv6Repository {
+
+    VirtualIpv6 create(VirtualIpv6 vip);
 
     List<VirtualIpv6> getVipsByAccountId(Integer accountId);
 
@@ -26,4 +25,6 @@ public interface VirtualIpv6Repository {
     Account getLockedAccountRecord(Integer accountId);
 
     Map<Integer, List<LoadBalancer>> getPorts(Integer vid);
+
+    void removeVirtualIpv6(VirtualIpv6 ipv6);
 }

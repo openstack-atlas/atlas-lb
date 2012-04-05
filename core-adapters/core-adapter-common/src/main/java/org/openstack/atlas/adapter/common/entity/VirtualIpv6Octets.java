@@ -17,13 +17,14 @@ import java.util.Set;
 )
 @DiscriminatorValue("ADAPTER")
 @Table(name = "adapter_vip_octets")
-public class VirtualIpv6Octets extends org.openstack.atlas.service.domain.entity.Entity implements Serializable {
+public class VirtualIpv6Octets implements Serializable {
     private final static long serialVersionUID = 532712316L;
 
 
     @Column(name = "account_id", nullable = false)
     private Integer accountId;
 
+    @Id
     @Column(name = "vip_id", nullable = false)
     private Integer virtualIpv6Id;
     

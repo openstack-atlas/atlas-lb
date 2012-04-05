@@ -61,7 +61,7 @@ public class LoadBalancerJoinVip implements Serializable {
     private Integer port;
 
     @ManyToOne
-    @JoinColumn(name = "load_balancer_id", insertable = false, updatable = false)
+    @JoinColumn(name = "load_balancer_id", insertable = false, updatable = false, nullable = true)
     private LoadBalancer loadBalancer;
 
     @ManyToOne
@@ -103,6 +103,7 @@ public class LoadBalancerJoinVip implements Serializable {
 
     public void setLoadBalancer(LoadBalancer loadBalancer) {
         this.loadBalancer = loadBalancer;
+        this.id.loadBalancerId = loadBalancer.getId();
     }
 
     public VirtualIp getVirtualIp() {
@@ -111,5 +112,6 @@ public class LoadBalancerJoinVip implements Serializable {
 
     public void setVirtualIp(VirtualIp virtualIp) {
         this.virtualIp = virtualIp;
+        this.id.virtualIpId = virtualIp.getId();
     }
 }

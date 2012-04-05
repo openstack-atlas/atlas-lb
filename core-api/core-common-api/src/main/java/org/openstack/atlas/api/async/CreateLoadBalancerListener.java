@@ -12,6 +12,7 @@ import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.openstack.atlas.service.domain.pojo.MessageDataContainer;
 import org.openstack.atlas.service.domain.repository.LoadBalancerRepository;
 import org.openstack.atlas.service.domain.service.LoadBalancerService;
+import org.openstack.atlas.service.domain.service.VirtualIpService;
 import org.openstack.atlas.service.domain.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -36,6 +37,11 @@ public class CreateLoadBalancerListener extends BaseListener {
 
     @Autowired
     private LoadBalancerService loadBalancerService;
+
+
+    @Autowired
+    private VirtualIpService virtualIpService;
+
     @Autowired
     private NotificationService notificationService;
     @Autowired
@@ -74,8 +80,10 @@ public class CreateLoadBalancerListener extends BaseListener {
             reverseProxyLoadBalancerService.createLoadBalancer(accountId, dbLoadBalancer);
             LOG.debug("Successfully created a load balancer via adapter.");
         } catch (Exception e) {
+            LOG.error(e.getMessage());
             dbLoadBalancer.setStatus(ERROR);
             dbLoadBalancer.setCreatedOnAdapter(false);
+            virtualIpService.removeAllVipsFromLoadBalancer(dbLoadBalancer);
             NodesHelper.setNodesToStatus(dbLoadBalancer, CoreNodeStatus.OFFLINE);
             loadBalancerRepository.update(dbLoadBalancer);
             String alertDescription = String.format("An error occurred while creating loadbalancer '%d' via adapter.", dbLoadBalancer.getId());

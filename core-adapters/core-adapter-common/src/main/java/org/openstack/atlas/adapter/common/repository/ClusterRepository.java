@@ -12,7 +12,7 @@ import javax.persistence.PersistenceContext;
 
 
 @Repository
-@Transactional
+@Transactional(value="transactionManager2")
 public class ClusterRepository {
 
     final Log LOG = LogFactory.getLog(ClusterRepository.class);

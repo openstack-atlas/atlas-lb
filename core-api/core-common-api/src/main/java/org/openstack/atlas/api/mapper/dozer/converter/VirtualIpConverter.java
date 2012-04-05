@@ -1,5 +1,7 @@
 package org.openstack.atlas.api.mapper.dozer.converter;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Logger;
 import org.dozer.CustomConverter;
 import org.openstack.atlas.core.api.v1.IpVersion;
@@ -21,6 +23,8 @@ import static org.openstack.atlas.core.api.v1.VipType.PUBLIC;
 import static org.openstack.atlas.core.api.v1.VipType.PRIVATE;
 
 public class VirtualIpConverter implements CustomConverter {
+    private final Log LOG = LogFactory.getLog(VirtualIpConverter.class);
+
     @Override
     public Object convert(Object existingDestinationFieldValue, Object sourceFieldValue, Class<?> destinationClass, Class<?> sourceClass) {
         final Integer VIP_ID_DEMARCATION = 9000000;

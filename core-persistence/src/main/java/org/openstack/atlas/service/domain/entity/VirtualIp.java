@@ -23,7 +23,7 @@ public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity 
     @Column(name = "account_id", nullable = false)
     private Integer accountId;
         
-    @Column(name = "address", length = 39, unique = true, nullable = true)
+    @Column(name = "address", length = 39, nullable = true)
     private String address;
 
     @Enumerated(EnumType.STRING)

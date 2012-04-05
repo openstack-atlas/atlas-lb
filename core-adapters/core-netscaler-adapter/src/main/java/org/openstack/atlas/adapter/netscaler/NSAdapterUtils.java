@@ -128,7 +128,7 @@ public class NSAdapterUtils
 	 	
         try 
         {
-            JAXBContext ctxt = JAXBContext.newInstance("com.citrix.cloud.org.openstack.atlas.adapter.temp.atlas.docs.loadbalancers.api.v1");
+            JAXBContext ctxt = JAXBContext.newInstance("com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1");
             Marshaller m = ctxt.createMarshaller() ; 
             m.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             Writer writer = new StringWriter();

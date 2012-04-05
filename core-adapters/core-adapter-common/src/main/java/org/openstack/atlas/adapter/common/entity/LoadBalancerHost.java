@@ -11,14 +11,14 @@ import java.io.Serializable;
         name = "vendor",
         discriminatorType = DiscriminatorType.STRING
 )
-@DiscriminatorValue("CORE")
+@DiscriminatorValue("ADAPTER")
 @Table(name = "load_balancer_host")
 public class LoadBalancerHost implements Serializable {
-    private final static long serialVersionUID = 542512317L;
+    private final static long serialVersionUID = 542572317L;
 
     @Embeddable
     public static class Id implements Serializable {
-        private final static long serialVersionUID = 542512317L;
+        private final static long serialVersionUID = 542572317L;
 
         @Column(name = "load_balancer_id")
         private Integer loadBalancerId;

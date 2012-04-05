@@ -4,72 +4,40 @@ package org.openstack.atlas.adapter.common.entity;
 import org.openstack.atlas.common.ip.IPv6;
 import org.openstack.atlas.common.ip.IPv6Cidr;
 import org.openstack.atlas.common.ip.exception.IPStringConversionException1;
+import org.openstack.atlas.core.api.v1.VipType;
+import org.openstack.atlas.service.domain.entity.VirtualIpType;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Calendar;
 
-@Entity
+@javax.persistence.Entity
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(
         name = "vendor",
         discriminatorType = DiscriminatorType.STRING
 )
-@DiscriminatorValue("CORE")
-@Table(name = "virtual_ip__cluster")
+@DiscriminatorValue("ADAPTER")
+@Table(name = "virtual_ip_cluster")
 public class VirtualIpCluster implements Serializable {
-    private final static long serialVersionUID = 542512317L;
-
-    @Embeddable
-    public static class Id implements Serializable {
-        private final static long serialVersionUID = 542512317L;
-
-        @Column(name = "virtual_ip_id")
-        private Integer virtualIpId;
+    private final static long serialVersionUID = 549512317L;
 
 
-        @Column(name = "cluster_id")
-        private Integer clusterId;
+    @Id
+    @Column(name = "address", unique = true, length = 39, nullable = false)
+    private String address;
 
-        public Id() {
-        }
-
-        public Id(Integer virtualIpId, Integer clusterId) {
-            this.virtualIpId = virtualIpId;
-            this.clusterId = clusterId;
-        }
-
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Id id = (Id) o;
-
-            if (virtualIpId != null ? !virtualIpId.equals(id.virtualIpId) : id.virtualIpId != null)
-                return false;
-            if (clusterId != null ? !clusterId.equals(id.clusterId) : id.clusterId != null) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = virtualIpId != null ? virtualIpId.hashCode() : 0;
-            result = 31 * result + (clusterId != null ? clusterId.hashCode() : 0);
-            return result;
-        }
-    }
-
-    @EmbeddedId
-    private Id id = new Id();
-
-
+    @Column(name = "vip_id", nullable = true)
+    private Integer vip_id;
 
     @ManyToOne
-    @JoinColumn(name = "cluster", nullable = true) // TODO: Should not be nullable. Need to get cluster internally
+    @JoinColumn(name = "cluster", nullable = true)
     private Cluster cluster;
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private VirtualIpType vipType;
 
 
     @Column(name = "last_deallocation")
@@ -83,29 +51,23 @@ public class VirtualIpCluster implements Serializable {
     @Column(name = "is_allocated", nullable = false)
     private Boolean isAllocated = false;
 
-    public VirtualIpCluster() {
+
+
+    public VirtualIpCluster()
+    {}
+
+    public VirtualIpCluster(String address, VirtualIpType vipType, Cluster cluster) {
+        this.address = address;
+        this.vipType = vipType;
+        this.cluster= cluster;
     }
 
-    public VirtualIpCluster(Integer vipId, Cluster cluster) {
-        this.cluster = cluster;
-        this.id.virtualIpId = vipId;
-        this.id.clusterId = cluster.getId();
+    public Integer getVipId() {
+        return vip_id;
     }
 
-    public Id getId() {
-        return id;
-    }
-
-    public void setId(Id id) {
-        this.id = id;
-    }
-
-    public Integer getVirtualIpId() {
-        return this.id.virtualIpId;
-    }
-
-    public void setVirtualIpId(Integer vipId) {
-        this.id.virtualIpId = vipId;
+    public void setVipId(Integer vip_id) {
+        this.vip_id = vip_id;
     }
 
 
@@ -115,6 +77,22 @@ public class VirtualIpCluster implements Serializable {
 
     public void setCluster(Cluster cluster) {
         this.cluster = cluster;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public VirtualIpType getVipType() {
+        return vipType;
+    }
+
+    public void setVipType(VirtualIpType vipType) {
+        this.vipType = vipType;
     }
 
     public Calendar getLastDeallocation() {

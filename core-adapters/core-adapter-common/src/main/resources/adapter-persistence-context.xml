@@ -13,6 +13,7 @@
     <context:component-scan base-package="org.openstack.atlas.adapter.common"/>
     <context:annotation-config/>
 
+
     <bean id="entityManagerFactory2" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="persistenceXmlLocation" value="classpath:META-INF/adapter-persistence.xml"/>
         <property name="persistenceUnitName" value="loadbalancingadapter"/>
@@ -36,6 +37,8 @@
     
     <tx:annotation-driven/>
     <bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>
+
+
     
 </beans>
 

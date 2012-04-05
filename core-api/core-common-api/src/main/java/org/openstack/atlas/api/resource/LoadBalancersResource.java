@@ -56,7 +56,7 @@ public class LoadBalancersResource extends CommonDependencyProvider {
             loadBalancer.setAccountId(accountId);
 
             loadBalancer = loadbalancerService.create(loadBalancer);
-
+            LOG.debug("Successfully created loadBalancer in DB");
             MessageDataContainer dataContainer = new MessageDataContainer();
             dataContainer.setLoadBalancer(loadBalancer);
 

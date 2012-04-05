@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openstack.atlas.service.domain.common.ErrorMessages;
 import org.openstack.atlas.service.domain.entity.*;
+import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.openstack.atlas.service.domain.exception.OutOfVipsException;
 import org.openstack.atlas.service.domain.repository.VirtualIpRepository;
 import org.springframework.stereotype.Repository;
@@ -27,6 +28,12 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
 
     public void persist(Object obj) {
         entityManager.persist(obj);
+    }
+
+
+    @Override
+    public VirtualIp create(VirtualIp vip) {
+          return entityManager.merge(vip);
     }
 
     @Override
@@ -57,6 +64,18 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
         return vips;
     }
 
+
+    @Override
+    public VirtualIp getById(Integer id) throws EntityNotFoundException {
+        VirtualIp vip = entityManager.find(VirtualIp.class, id);
+        if (vip == null) {
+            throw new EntityNotFoundException(ErrorMessages.VIP_NOT_FOUND);
+        }
+        return vip;
+    }
+
+
+
     @Override
     public void removeJoinRecord(LoadBalancerJoinVip loadBalancerJoinVip) {
         loadBalancerJoinVip = entityManager.find(LoadBalancerJoinVip.class, loadBalancerJoinVip.getId());
@@ -65,6 +84,12 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
         entityManager.remove(loadBalancerJoinVip);
     }
 
+
+    @Override
+    public void removeVirtualIp(VirtualIp vip) {
+
+        entityManager.remove(vip);
+    }
 
 
     @Override

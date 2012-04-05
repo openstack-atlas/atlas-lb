@@ -24,6 +24,12 @@ public class VirtualIpv6RepositoryImpl implements VirtualIpv6Repository {
     protected EntityManager entityManager;
 
     @Override
+    public VirtualIpv6 create(VirtualIpv6 vip6) {
+          return entityManager.merge(vip6);
+    }
+
+
+    @Override
     public List<VirtualIpv6> getVipsByAccountId(Integer accountId) {
         List<VirtualIpv6> vips;
         String query = "select distinct(j.virtualIp) from LoadBalancerJoinVip6 j where j.loadBalancer.accountId = :accountId";
@@ -56,6 +62,13 @@ public class VirtualIpv6RepositoryImpl implements VirtualIpv6Repository {
         VirtualIpv6 virtualIpv6 = entityManager.find(VirtualIpv6.class, loadBalancerJoinVip6.getVirtualIp().getId());
         virtualIpv6.getLoadBalancerJoinVip6Set().remove(loadBalancerJoinVip6);
         entityManager.remove(loadBalancerJoinVip6);
+    }
+
+
+    @Override
+    public void removeVirtualIpv6(VirtualIpv6 ipv6) {
+
+        entityManager.remove(ipv6);
     }
 
     @Override

@@ -5,6 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.openstack.atlas.datamodel.CoreLoadBalancerStatus;
 import org.openstack.atlas.service.domain.common.*;
 import org.openstack.atlas.service.domain.entity.LoadBalancer;
+import org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip;
+import org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip6;
 import org.openstack.atlas.service.domain.exception.BadRequestException;
 import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.openstack.atlas.service.domain.exception.LimitReachedException;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class LoadBalancerServiceImpl implements LoadBalancerService {
@@ -39,16 +42,23 @@ public class LoadBalancerServiceImpl implements LoadBalancerService {
     @Override
     @Transactional
     public final LoadBalancer create(final LoadBalancer loadBalancer) throws PersistenceServiceException {
+
         try {
             virtualIpService.addAccountRecord(loadBalancer.getAccountId());
         } catch (NoSuchAlgorithmException e) {
+;
             throw new PersistenceServiceException(e);
         }
 
         validateCreate(loadBalancer);
+
         addDefaultValuesForCreate(loadBalancer);
+
         LoadBalancer dbLoadBalancer = loadBalancerRepository.create(loadBalancer);
+
         dbLoadBalancer.setUserName(loadBalancer.getUserName());
+
+
         return dbLoadBalancer;
     }
 

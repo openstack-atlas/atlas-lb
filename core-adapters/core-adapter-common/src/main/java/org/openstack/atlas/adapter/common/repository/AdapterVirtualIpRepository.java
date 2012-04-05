@@ -8,12 +8,15 @@ import org.openstack.atlas.service.domain.entity.*;
 import org.openstack.atlas.adapter.common.entity.*;
 import org.openstack.atlas.service.domain.entity.VirtualIp;
 import org.openstack.atlas.service.domain.entity.VirtualIp_;
+import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.openstack.atlas.service.domain.exception.OutOfVipsException;
 import org.openstack.atlas.service.domain.exception.ServiceUnavailableException;
 
 
 import org.openstack.atlas.adapter.common.entity.Cluster;
 import org.openstack.atlas.adapter.common.entity.VirtualIpCluster;
+import org.openstack.atlas.service.domain.repository.VirtualIpRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,57 +33,60 @@ import java.util.*;
 
 
 @Repository
-@Transactional
+@Transactional(value="transactionManager2")
 public class AdapterVirtualIpRepository  {
     private final Log LOG = LogFactory.getLog(AdapterVirtualIpRepository.class);
-    @PersistenceContext(unitName = "loadbalancing")
+    @PersistenceContext(unitName = "loadbalancingadapter")
     protected EntityManager entityManager;
 
+    @Autowired
+    protected VirtualIpRepository virtualIpRepository;
 
-
-    public VirtualIp allocateIpv4VipBeforeDate(Cluster cluster, Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException {
+    public void allocateIpv4VipBeforeDate(VirtualIp vip, Cluster cluster, Calendar vipReuseTime) throws OutOfVipsException {
         List<VirtualIpCluster> vipCandidates;
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<VirtualIpCluster> criteria = builder.createQuery(VirtualIpCluster.class);
         Root<VirtualIpCluster> vipClusterRoot = criteria.from(VirtualIpCluster.class);
-        Root<VirtualIp> vipRoot = criteria.from(VirtualIp.class);
 
         Predicate isNotAllocated = builder.equal(vipClusterRoot.get(VirtualIpCluster_.isAllocated), false);
         Predicate lastDeallocationIsNull = builder.isNull(vipClusterRoot.get(VirtualIpCluster_.lastDeallocation));
         Predicate isBeforeLastDeallocation = builder.lessThan(vipClusterRoot.get(VirtualIpCluster_.lastDeallocation), vipReuseTime);
-
+        Predicate sameVipType = builder.equal(vipClusterRoot.get(VirtualIpCluster_.vipType), vip.getVipType());
 
 
         criteria.select(vipClusterRoot);
-        criteria.where(builder.and(isNotAllocated, builder.or(lastDeallocationIsNull, isBeforeLastDeallocation)));
+        criteria.where(builder.and(isNotAllocated, sameVipType, builder.or(lastDeallocationIsNull, isBeforeLastDeallocation)));
 
         try {
             vipCandidates = entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).getResultList();
 
-            if ((vipCandidates == null) || vipCandidates.isEmpty())
+            if ((vipCandidates == null) || vipCandidates.isEmpty())  {
+                LOG.error(ErrorMessages.OUT_OF_VIPS);
                 throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
-
-            Integer vipId;
+            }
 
             for (VirtualIpCluster vipCandidate : vipCandidates)
             {
-                vipId = vipCandidate.getVirtualIpId();
-                VirtualIpCluster vipCluster = getVirtualIpCluster(vipId);
-                VirtualIp vip = getVirtualIp(vipId);
+                // Is any of the candidate VIPs in the right cluster?
+                if (vipCandidate.getCluster().getId().equals(cluster.getId()))  {
+                    vipCandidate.setVipId(vip.getId());
+                    vipCandidate.setAllocated(true);
+                    vipCandidate.setLastAllocation(Calendar.getInstance());
 
-                if (vipCluster.equals(cluster) && (vip.getVipType().equals(vipType)))
-                {
-                    vipCluster.setAllocated(true);
-                    vipCluster.setLastAllocation(Calendar.getInstance());
                     entityManager.merge(vipCandidate);
-                    return vip;
+
+                    vip.setAddress(vipCandidate.getAddress());
+
+                    return;
                 }
             }
         } catch (Exception e) {
+            LOG.debug("Caught an exception");
             LOG.error(e);
             throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
         }
 
+        LOG.error(ErrorMessages.OUT_OF_VIPS);
         throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
     }
 
@@ -91,11 +97,13 @@ public class AdapterVirtualIpRepository  {
 
         vipCluster.setAllocated(false);
         vipCluster.setLastDeallocation(Calendar.getInstance());
-        entityManager.merge(virtualIp);
+        vipCluster.setVipId(null);
+        entityManager.merge(vipCluster);
+
         LOG.info(String.format("Virtual Ip '%d' de-allocated.", virtualIp.getId()));
     }
 
-    public VirtualIp allocateIpv4VipAfterDate(Cluster cluster, Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException {
+    public void allocateIpv4VipAfterDate(VirtualIp vip, Cluster cluster, Calendar vipReuseTime) throws OutOfVipsException {
         List<VirtualIpCluster> vipCandidates;
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<VirtualIpCluster> criteria = builder.createQuery(VirtualIpCluster.class);
@@ -103,44 +111,45 @@ public class AdapterVirtualIpRepository  {
 
         Predicate isNotAllocated = builder.equal(vipClusterRoot.get(VirtualIpCluster_.isAllocated), false);
         Predicate isAfterLastDeallocation = builder.greaterThan(vipClusterRoot.get(VirtualIpCluster_.lastDeallocation), vipReuseTime);
-
+        Predicate sameVipType = builder.equal(vipClusterRoot.get(VirtualIpCluster_.vipType), vip.getVipType());
 
         criteria.select(vipClusterRoot);
-        criteria.where(isNotAllocated, isAfterLastDeallocation);
+        criteria.where(builder.and(isNotAllocated, sameVipType, isAfterLastDeallocation));
 
         try {
             vipCandidates = entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).getResultList();
 
-            if ((vipCandidates == null) || vipCandidates.isEmpty())
+            if ((vipCandidates == null) || vipCandidates.isEmpty())   {
+                LOG.error(ErrorMessages.OUT_OF_VIPS);
                 throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
+            }
 
-            Integer vipId;
-
-            for (VirtualIpCluster vipCandidate : vipCandidates) {
-
-                vipId = vipCandidate.getVirtualIpId();
-
-                VirtualIpCluster vipCluster = getVirtualIpCluster(vipId);
-                VirtualIp vip = getVirtualIp(vipId);
-
-                if ((vipCluster.equals(cluster)) && (vip.getVipType().equals(vipType)))
-                {
+            for (VirtualIpCluster vipCandidate : vipCandidates)
+            {
+                // Is any of the candidate VIPs in the right cluster?
+                if (vipCandidate.getCluster().getId().equals(cluster.getId()))  {
+                    vipCandidate.setVipId(vip.getId());
                     vipCandidate.setAllocated(true);
                     vipCandidate.setLastAllocation(Calendar.getInstance());
+
                     entityManager.merge(vipCandidate);
-                    return vip;
+
+                    vip.setAddress(vipCandidate.getAddress());
+                    return;
                 }
             }
+
         } catch (Exception e) {
             LOG.error(e);
             throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
         }
 
+        LOG.error(ErrorMessages.OUT_OF_VIPS);
         throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
     }
 
     public VirtualIpCluster getVirtualIpCluster(Integer vipId) {
-        String hqlStr = "from VirtualIpCluster vipCluster where vipCluster.virtualIpId = :vipId";
+        String hqlStr = "from VirtualIpCluster vipCluster where vipCluster.vip_id = :vipId";
         Query query = entityManager.createQuery(hqlStr).setParameter("vipId", vipId).setMaxResults(1);
         List<VirtualIpCluster> results = query.getResultList();
         if (results.size() < 1) {
@@ -150,15 +159,15 @@ public class AdapterVirtualIpRepository  {
         return results.get(0);
     }
 
-    public VirtualIp getVirtualIp(Integer vipId) {
-        String hqlStr = "from VirtualIp vip where vip.id = :vipId";
-        Query query = entityManager.createQuery(hqlStr).setParameter("vipId", vipId).setMaxResults(1);
-        List<VirtualIp> results = query.getResultList();
-        if (results.size() < 1) {
-            LOG.error(String.format("Error no VirtualIp found with id %d.", vipId));
-            return null;
+    public VirtualIp getVirtualIp(Integer vipId)  throws OutOfVipsException {
+
+        try {
+            return virtualIpRepository.getById(vipId);
+        } catch(EntityNotFoundException e)
+        {
+            LOG.error(e);
+            throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
         }
-        return results.get(0);
     }
 
     public VirtualIpv6Octets getVirtualIpv6VipOctet(Integer vipId) {
@@ -175,7 +184,7 @@ public class AdapterVirtualIpRepository  {
     
     public VirtualIpCluster createVirtualIpCluster(VirtualIpCluster vipCluster)
     {
-        LOG.info("Create/Update a VirtualIpCluster " + vipCluster.getId() + "...");
+        LOG.info("Create/Update a VirtualIpCluster " + vipCluster.getAddress() + "...");
         VirtualIpCluster dbVipCluster = entityManager.merge(vipCluster);
 
         return dbVipCluster;

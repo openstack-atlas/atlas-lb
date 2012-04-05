@@ -8,4 +8,5 @@ public interface AdapterVirtualIpService {
     LoadBalancer assignVipsToLoadBalancer(LoadBalancer loadBalancer) throws PersistenceServiceException;
     VirtualIpCluster createVirtualIpCluster(VirtualIpCluster vipCluster) throws PersistenceServiceException;
     VirtualIpCluster getVirtualIpCluster(Integer vipId);
+    void removeAllVipsFromLoadBalancer(LoadBalancer lb);
 }

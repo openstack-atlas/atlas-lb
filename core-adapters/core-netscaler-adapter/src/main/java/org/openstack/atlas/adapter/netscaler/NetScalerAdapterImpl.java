@@ -21,6 +21,7 @@ import org.openstack.atlas.service.domain.exception.*;
 
 import org.openstack.atlas.adapter.common.service.HostService;
 
+import org.openstack.atlas.service.domain.service.VirtualIpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -61,21 +62,26 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
     public void createLoadBalancer(LoadBalancer lb)
             throws AdapterException {
 
-        // Choose a host and place the loadbalancer on it
+
+
         Host host = hostService.getDefaultActiveHost();
 
         if (host == null)
             throw new AdapterException("Cannot retrieve default active host from persistence layer");
 
+
         LoadBalancerHost lbHost = new LoadBalancerHost(lb.getId(), host);
 
         try {
+            LOG.debug("Before calling hostService.createLoadBalancerHost()");
             hostService.createLoadBalancerHost(lbHost);
             virtualIpService.assignVipsToLoadBalancer(lb);
         } catch (PersistenceServiceException e) {
-            throw new AdapterException("Cannot assign Vips to the loadBalancer");
+            throw new AdapterException("Cannot assign Vips to the loadBalancer : " + e.getMessage());
         }
 
+
+        try {
         String resourceType = "loadbalancers";
 
         Integer accountId = lb.getAccountId(); 
@@ -92,6 +98,12 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType);
 
         nsAdapterUtils.performRequest("POST", resourceUrl, requestBody);
+        } catch(Exception e) {
+            LOG.debug("Removing allocated Vips");
+            virtualIpService.removeAllVipsFromLoadBalancer(lb);
+            throw new AdapterException("Error occurred while creating request or connecting to device : " + e.getMessage());
+        }
+
     }
 
 

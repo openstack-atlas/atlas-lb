@@ -23,27 +23,40 @@ public class HostServiceImpl implements HostService {
 
 
     @Override
-    @Transactional
+    @Transactional(value="transactionManager2")
     public final LoadBalancerHost createLoadBalancerHost(LoadBalancerHost lbHost) throws PersistenceServiceException {
 
-        LoadBalancerHost dbLoadBalancerHost = hostRepository.createLoadBalancerHost(lbHost);
+        LOG.debug("At start of createLoadBalacerHost");
+        try {
+            LoadBalancerHost dbLoadBalancerHost = hostRepository.createLoadBalancerHost(lbHost);
+            return dbLoadBalancerHost;
+        } catch (Exception e) {
+            throw new PersistenceServiceException(e);
+        }
 
-        return dbLoadBalancerHost;
     }
 
     @Override
     public Host getDefaultActiveHost() {
 
+        LOG.debug("Before calling hostRepository.getHosts()");
         List<Host> hosts = hostRepository.getHosts();
+
+        LOG.debug(String.format("HostRepository.getHosts() retuned %d hosts", hosts.size()));
+
         if (hosts == null || hosts.size() <= 0) {
             LOG.error("ACTIVE_TARGET host not found");
             return null;
         }
         if (hosts.size() == 1) {
-            return (hosts.get(0));
+            Host host = hosts.get(0);
+            LOG.debug("Host endpoint is " + host.getEndpoint());
+            return (host);
         } else {
-            return hostRepository.getHostWithMinimumLoadBalancers(hosts);
+            Host host =  hostRepository.getHostWithMinimumLoadBalancers(hosts);
+            LOG.debug("Host endpoint is " + host.getEndpoint());
+            return (host);
+
         }
     }
-
 }
