@@ -28,6 +28,11 @@ public class VirtualIpv6RepositoryImpl implements VirtualIpv6Repository {
           return entityManager.merge(vip6);
     }
 
+    @Override
+    public void update(VirtualIpv6 vip6) {
+          entityManager.merge(vip6);
+    }
+
 
     @Override
     public List<VirtualIpv6> getVipsByAccountId(Integer accountId) {

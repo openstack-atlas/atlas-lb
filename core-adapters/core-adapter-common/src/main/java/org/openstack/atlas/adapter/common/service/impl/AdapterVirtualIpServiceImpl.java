@@ -150,20 +150,7 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
 
     @Transactional(value="transactionManager2")
     public void removeAllVipsFromLoadBalancer(LoadBalancer lb) {
-        for (LoadBalancerJoinVip loadBalancerJoinVip : lb.getLoadBalancerJoinVipSet()) {
-            LOG.debug("Removing loadBalancerJoinVip for vip id " + loadBalancerJoinVip.getVirtualIp().getId());
-            virtualIpRepository.removeJoinRecord(loadBalancerJoinVip);
-            adapterVirtualIpRepository.deallocateVirtualIp(loadBalancerJoinVip.getVirtualIp());
-        }
-        LOG.debug("Reclaimed all IPv4 VIPs");
 
-        for (LoadBalancerJoinVip6 loadBalancerJoinVip6 : lb.getLoadBalancerJoinVip6Set()) {
-            LOG.debug("Removing loadBalancerJoinVip for vip id " + loadBalancerJoinVip6.getVirtualIp().getId());
-            virtualIpv6Repository.removeJoinRecord(loadBalancerJoinVip6);
-            virtualIpv6Repository.deleteVirtualIp(loadBalancerJoinVip6.getVirtualIp());
-        }
-
-        LOG.debug("Reclaimed all IPv6 VIPs");
     }
 
 

@@ -99,6 +99,36 @@ public class VirtualIpServiceImpl implements VirtualIpService {
         return loadBalancer;
     }
 
+    @Override
+    @Transactional
+    public void updateLoadBalancerVips(LoadBalancer loadBalancer) throws PersistenceServiceException {
+
+        Set<LoadBalancerJoinVip> loadBalancerJoinVipSetConfig = loadBalancer.getLoadBalancerJoinVipSet();
+
+        if (!loadBalancerJoinVipSetConfig.isEmpty()) {
+            for (LoadBalancerJoinVip loadBalancerJoinVip : loadBalancerJoinVipSetConfig) {
+
+                VirtualIp vip = loadBalancerJoinVip.getVirtualIp();
+
+                virtualIpRepository.update(vip);
+
+            }
+
+        }
+
+        Set<LoadBalancerJoinVip6> loadBalancerJoinVip6SetConfig = loadBalancer.getLoadBalancerJoinVip6Set();
+
+        if (!loadBalancer.getLoadBalancerJoinVip6Set().isEmpty()) {
+
+
+            for (LoadBalancerJoinVip6 loadBalancerJoinVip6 : loadBalancerJoinVip6SetConfig) {
+                VirtualIpv6 vip6 = loadBalancerJoinVip6.getVirtualIp();
+
+                virtualIpv6Repository.update(vip6);
+            }
+        }
+    }
+
 
     protected LoadBalancer assignDefaultIPv6ToLoadBalancer(LoadBalancer loadBalancer) throws PersistenceServiceException
     {
@@ -113,6 +143,8 @@ public class VirtualIpServiceImpl implements VirtualIpService {
 
         return loadBalancer;
     }
+
+
 
 
     protected LoadBalancer assignExtraVipsToLoadBalancer(LoadBalancer loadBalancer) throws PersistenceServiceException
@@ -227,6 +259,8 @@ public class VirtualIpServiceImpl implements VirtualIpService {
             virtualIpRepository.removeJoinRecord(loadBalancerJoinVip);
             reclaimVirtualIp(lb, loadBalancerJoinVip.getVirtualIp());
         }
+
+        lb.setLoadBalancerJoinVipSet(null);
         LOG.debug("Reclaimed all IPv4 VIPs");
 
         for (LoadBalancerJoinVip6 loadBalancerJoinVip6 : lb.getLoadBalancerJoinVip6Set()) {
@@ -235,6 +269,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
             reclaimIpv6VirtualIp(lb, loadBalancerJoinVip6.getVirtualIp());
         }
 
+        lb.setLoadBalancerJoinVip6Set(null);
         LOG.debug("Reclaimed all IPv6 VIPs");
     }
 

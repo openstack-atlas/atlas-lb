@@ -10,6 +10,8 @@ public interface VirtualIpv6Repository {
 
     VirtualIpv6 create(VirtualIpv6 vip);
 
+    void update(VirtualIpv6 vip);
+
     List<VirtualIpv6> getVipsByAccountId(Integer accountId);
 
     Set<VirtualIpv6> getVipsByLoadBalancerId(Integer loadBalancerId);

@@ -93,7 +93,11 @@ public class CreateLoadBalancerListener extends BaseListener {
             return;
         }
 
+
+
+
         // Update load balancer in DB
+        virtualIpService.updateLoadBalancerVips(dbLoadBalancer);
         dbLoadBalancer.setStatus(ACTIVE);
         dbLoadBalancer.setCreatedOnAdapter(true);
         NodesHelper.setNodesToStatus(dbLoadBalancer, CoreNodeStatus.ONLINE);

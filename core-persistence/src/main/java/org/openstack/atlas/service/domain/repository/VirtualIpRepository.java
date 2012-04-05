@@ -14,6 +14,8 @@ public interface VirtualIpRepository {
 
     VirtualIp create(VirtualIp vip);
 
+    void update(VirtualIp vip);
+
     List<LoadBalancerJoinVip> getJoinRecordsForVip(VirtualIp virtualIp);
 
     List<VirtualIp> getVipsByAccountId(Integer accountId);

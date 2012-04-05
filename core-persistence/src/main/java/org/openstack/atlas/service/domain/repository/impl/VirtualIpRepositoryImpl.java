@@ -37,6 +37,12 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
     }
 
     @Override
+    public void update(VirtualIp vip) {
+          entityManager.merge(vip);
+    }
+
+
+    @Override
     public List<LoadBalancerJoinVip> getJoinRecordsForVip(VirtualIp virtualIp) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<LoadBalancerJoinVip> criteria = builder.createQuery(LoadBalancerJoinVip.class);
@@ -78,8 +84,12 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
 
     @Override
     public void removeJoinRecord(LoadBalancerJoinVip loadBalancerJoinVip) {
+
+        VirtualIp vip = loadBalancerJoinVip.getVirtualIp();
+        Integer vipId = vip.getId();
+
         loadBalancerJoinVip = entityManager.find(LoadBalancerJoinVip.class, loadBalancerJoinVip.getId());
-        VirtualIp virtualIp = entityManager.find(VirtualIp.class, loadBalancerJoinVip.getVirtualIp().getId());
+        VirtualIp virtualIp = entityManager.find(VirtualIp.class, vipId);
         virtualIp.getLoadBalancerJoinVipSet().remove(loadBalancerJoinVip);
         entityManager.remove(loadBalancerJoinVip);
     }
@@ -87,8 +97,8 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
 
     @Override
     public void removeVirtualIp(VirtualIp vip) {
-
-        entityManager.remove(vip);
+        VirtualIp virtualIp = entityManager.find(VirtualIp.class, vip.getId());
+        entityManager.remove(virtualIp);
     }
 
 
