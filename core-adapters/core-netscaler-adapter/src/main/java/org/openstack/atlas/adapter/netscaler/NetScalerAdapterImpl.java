@@ -3,8 +3,15 @@ package org.openstack.atlas.adapter.netscaler;
 import org.openstack.atlas.adapter.common.config.LoadBalancerEndpointConfiguration;
 import org.openstack.atlas.adapter.common.EndpointUtils;
 
+import org.openstack.atlas.adapter.common.config.PublicApiServiceConfigurationKeys;
+import org.openstack.atlas.adapter.common.entity.Cluster;
 import org.openstack.atlas.adapter.common.entity.Host;
+import org.openstack.atlas.adapter.common.repository.HostRepository;
 import org.openstack.atlas.adapter.common.service.AdapterVirtualIpService;
+import org.openstack.atlas.common.config.Configuration;
+import org.openstack.atlas.common.crypto.CryptoUtil;
+import org.openstack.atlas.common.crypto.exception.DecryptException;
+import org.openstack.atlas.common.crypto.exception.EncryptException;
 import org.openstack.atlas.service.domain.entity.*;
 import org.openstack.atlas.service.domain.repository.NodeRepository;
 
@@ -32,7 +39,10 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
     public static Log LOG = LogFactory.getLog(NetScalerAdapterImpl.class.getName());
     private static String SOURCE_IP = "SOURCE_IP";
     private static String HTTP_COOKIE = "HTTP_COOKIE";
-	protected NodeRepository nodeRepository;
+
+
+    @Autowired
+    protected Configuration configuration;
 
     @Autowired
     protected NSAdapterUtils nsAdapterUtils;
@@ -41,28 +51,59 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
     @Autowired
     protected HostService hostService;
 
+
+    @Autowired
+    protected HostRepository hostRepository;
+
     @Autowired
     protected AdapterVirtualIpService virtualIpService;
 
-    public void setNodeRepository(NodeRepository nodeRepository) {
-        this.nodeRepository = nodeRepository;
-    }
+    /*
+    public NetScalerAdapterImpl() {
 
+        String logFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.adapter_config_file_location);
+
+        //Read adapter config file.
+    }
+    */
 
     private LoadBalancerEndpointConfiguration getConfig(Integer loadBalancerId)  throws AdapterException
     {
-        LoadBalancerEndpointConfiguration config = EndpointUtils.getConfigbyLoadBalancerId(loadBalancerId);
+        LoadBalancerEndpointConfiguration config = getConfigbyLoadBalancerId(loadBalancerId);
         if (config == null)
             throw new AdapterException("Adapter error: Cannot fetch information about LB devices");
 
         return config;
     }
 
+    private LoadBalancerEndpointConfiguration getConfigbyLoadBalancerId(Integer lbId) {
+
+        if (hostService == null) {
+            LOG.debug("hostService is null !");
+        }
+
+        LoadBalancerHost lbHost = hostService.getLoadBalancerHost(lbId);
+        Host host = lbHost.getHost();
+        return getConfigbyHost(host);
+    }
+
+    private LoadBalancerEndpointConfiguration getConfigbyHost(Host host) {
+        try {
+            Cluster cluster = host.getCluster();
+            Host endpointHost = hostRepository.getEndPointHost(cluster.getId());
+            List<String> failoverHosts = hostRepository.getFailoverHostNames(cluster.getId());
+            String logFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.access_log_file_location);
+            return new LoadBalancerEndpointConfiguration(endpointHost, cluster.getUsername(), CryptoUtil.decrypt(cluster.getPassword()), host, failoverHosts, logFileLocation);
+        } catch(DecryptException except)
+        {
+            LOG.error(String.format("Decryption exception: ", except.getMessage()));
+            return null;
+        }
+    }
+
     @Override
     public void createLoadBalancer(LoadBalancer lb)
             throws AdapterException {
-
-
 
         Host host = hostService.getDefaultActiveHost();
 
@@ -82,22 +123,21 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
 
 
         try {
-        String resourceType = "loadbalancers";
+            String resourceType = "loadbalancers";
 
-        Integer accountId = lb.getAccountId(); 
+            Integer accountId = lb.getAccountId();
 
-        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer();
+            com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer();
 
-        nsAdapterUtils.populateNSLoadBalancer(lb, nsLB);
+            nsAdapterUtils.populateNSLoadBalancerForCreate(lb, nsLB);
 
-        String requestBody = nsAdapterUtils.getRequestBody(nsLB);
+            String requestBody = nsAdapterUtils.getRequestBody(nsLB);
 
+            String serviceUrl = host.getEndpoint();
 
-        String serviceUrl = host.getEndpoint();
+            String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType);
 
-        String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType);
-
-        nsAdapterUtils.performRequest("POST", resourceUrl, requestBody);
+            nsAdapterUtils.performRequest("POST", resourceUrl, requestBody);
         } catch(Exception e) {
             undoCreateLoadBalancer(lb, lbHost);
             throw new AdapterException("Error occurred while creating request or connecting to device : " + e.getMessage());
@@ -108,6 +148,17 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
     private void undoCreateLoadBalancer(LoadBalancer lb, LoadBalancerHost lbHost) {
 
         try {
+            hostService.removeLoadBalancerHost(lbHost);
+            virtualIpService.undoAllVipsFromLoadBalancer(lb);
+        } catch (PersistenceServiceException e) {
+            LOG.error(String.format("Failed to remove LoadBalancerHost for lbId %d: %s", lb.getId(), e.getMessage()));
+        }
+    }
+
+    private void removeLoadBalancerAdapterResources(LoadBalancer lb) {
+
+        try {
+            LoadBalancerHost lbHost = hostService.getLoadBalancerHost(lb.getId());
             hostService.removeLoadBalancerHost(lbHost);
             virtualIpService.removeAllVipsFromLoadBalancer(lb);
         } catch (PersistenceServiceException e) {
@@ -128,7 +179,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         Integer accountId = lb.getAccountId(); 
         
         com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer();
-        nsAdapterUtils.populateNSLoadBalancer(lb, nsLB);
+        nsAdapterUtils.populateNSLoadBalancerForUpdate(lb, nsLB);
         
 		String requestBody = nsAdapterUtils.getRequestBody(nsLB);
 		String serviceUrl = config.getHost().getEndpoint();
@@ -145,12 +196,16 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         Integer accountId = lb.getAccountId(); 
         Integer lbId = lb.getId();   
 
+        LOG.debug("NetScaler adapter preparing to delete loadbalancer with id " + lbId);
+
         LoadBalancerEndpointConfiguration config = getConfig(lbId);
 
         String serviceUrl = config.getHost().getEndpoint();
         String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, lbId);
 
         nsAdapterUtils.performRequest("DELETE", resourceUrl);
+
+        removeLoadBalancerAdapterResources(lb);
     }
 
     @Override

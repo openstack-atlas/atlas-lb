@@ -150,9 +150,28 @@ public class NSAdapterUtils
     	return requestBody;
     }
 
+    public void populateNSLoadBalancerForUpdate(LoadBalancer lb, com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB)
+           throws BadRequestException
+    {
+        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIp nsVIP = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIp();
+        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.HealthMonitor nsMon = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.HealthMonitor();
+        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.SessionPersistence nsPersistence = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.SessionPersistence();
+        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.ConnectionThrottle nsThrottle = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.ConnectionThrottle();
 
 
-    public void populateNSLoadBalancer(LoadBalancer lb, com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB)
+    	String name = lb.getName();
+    	String alg = lb.getAlgorithm().toString();
+
+    	nsLB.setName(name);
+        nsLB.setAlgorithm(alg);
+
+        //Set all the lists to null so they won't get generated in the request payload.
+        nsLB.setVirtualIp(null);
+        nsLB.setNodes(null);
+        nsLB.setCertificates(null);
+    }
+
+    public void populateNSLoadBalancerForCreate(LoadBalancer lb, com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB)
            throws BadRequestException
     {
         com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIp nsVIP = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIp();

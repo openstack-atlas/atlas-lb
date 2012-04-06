@@ -107,6 +107,18 @@ public class AdapterVirtualIpRepository  {
         }
     }
 
+    public void resetVirtualIp(VirtualIp vip) {
+
+        IpVersion ipVersion = vip.getIpVersion();
+        Integer vipId = vip.getId();
+
+        if (ipVersion == IpVersion.IPV6) {
+            resetIpv6VirtualIp(vipId);
+        } else {
+            resetIpv4VirtualIp(vipId);
+        }
+    }
+
 
     private void deallocateIpv4VirtualIp(Integer vipId) {
 
@@ -120,7 +132,30 @@ public class AdapterVirtualIpRepository  {
         LOG.info(String.format("Virtual Ip '%d' de-allocated.", vipId));
     }
 
+    private void resetIpv4VirtualIp(Integer vipId) {
+
+        VirtualIpv4 vipIpv4 = getVirtualIpCluster(vipId);
+
+        vipIpv4.setAllocated(false);
+        vipIpv4.setLastAllocation(null);
+        vipIpv4.setLastDeallocation(null);
+        vipIpv4.setVipId(null);
+
+        entityManager.merge(vipIpv4);
+
+        LOG.info(String.format("Virtual Ip '%d' de-allocated.", vipId));
+    }
+
     private void deallocateIpv6VirtualIp(Integer vipId) {
+
+        VirtualIpv6 vip6 = getVirtualIpv6Octets(vipId);
+
+        entityManager.remove(vip6);
+
+        LOG.info(String.format("Virtual Ip '%d' de-allocated.", vipId));
+    }
+
+    private void resetIpv6VirtualIp(Integer vipId) {
 
         VirtualIpv6 vip6 = getVirtualIpv6Octets(vipId);
 

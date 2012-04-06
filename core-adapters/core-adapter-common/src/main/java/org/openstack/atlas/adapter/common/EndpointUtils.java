@@ -14,52 +14,71 @@ import org.apache.commons.logging.LogFactory;
 import org.openstack.atlas.adapter.common.config.LoadBalancerEndpointConfiguration;
 import org.openstack.atlas.adapter.common.config.PublicApiServiceConfigurationKeys;
 import org.openstack.atlas.adapter.common.entity.LoadBalancerHost;
+import org.openstack.atlas.adapter.common.repository.HostRepository;
 import org.openstack.atlas.adapter.exception.AdapterException;
 import org.openstack.atlas.adapter.common.entity.Cluster;
 import org.openstack.atlas.adapter.common.entity.Host;
-
-import org.openstack.atlas.adapter.common.repository.ClusterRepository;
-import org.openstack.atlas.adapter.common.repository.HostRepository;
+import org.openstack.atlas.adapter.common.service.HostService;
 import org.openstack.atlas.common.config.Configuration;
 import org.openstack.atlas.common.crypto.CryptoUtil;
 import org.openstack.atlas.common.crypto.exception.DecryptException;
-import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
-import org.openstack.atlas.service.domain.repository.LoadBalancerRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class EndpointUtils {
 
     public static Log LOG = LogFactory.getLog(EndpointUtils.class.getName());
 
 
     @Autowired
-    protected static Configuration configuration;
+    protected Configuration configuration;
 
     @Autowired
-    protected static LoadBalancerRepository loadBalancerRepository;
-    @Autowired
-    protected static HostRepository hostRepository;
+    protected HostService hostService;
 
     @Autowired
-    protected static ClusterRepository clusterRepository;
+    protected HostRepository hostRepository;
 
-    public static LoadBalancerEndpointConfiguration getConfigbyLoadBalancerId(Integer lbId)  {
-        try {
-            org.openstack.atlas.service.domain.entity.LoadBalancer loadBalancer = loadBalancerRepository.getById(lbId);
 
-            LoadBalancerHost lbHost = hostRepository.getLBHost(loadBalancer.getId());
-            Host host = lbHost.getHost();
-            return getConfigbyHost(host);
-        } catch(EntityNotFoundException except)
-        {
-            LOG.error(String.format("Entity not found exception: ", except.getMessage()));
-            return null;
+    private static EndpointUtils endpointUtils;
+
+
+    private static void setEndpointUtilsSingleton() {
+
+        if (endpointUtils == null) {
+            endpointUtils = new EndpointUtils();
         }
     }
 
+
+    public static LoadBalancerEndpointConfiguration getConfigbyLoadBalancerId(Integer lbId)  {
+        setEndpointUtilsSingleton();
+        return endpointUtils.getConfigbyLoadBalancerIdInternal(lbId);
+
+    }
+
+    private LoadBalancerEndpointConfiguration getConfigbyLoadBalancerIdInternal(Integer lbId) {
+
+        if (hostService == null) {
+            LOG.debug("hostService is null !");
+        }
+
+        LoadBalancerHost lbHost = hostService.getLoadBalancerHost(lbId);
+        Host host = lbHost.getHost();
+        return getConfigbyHost(host);
+    }
+
+
     public static LoadBalancerEndpointConfiguration getConfigbyHost(Host host) {
+        setEndpointUtilsSingleton();
+        return endpointUtils.getConfigbyHostInternal(host);
+    }
+
+    private LoadBalancerEndpointConfiguration getConfigbyHostInternal(Host host) {
         try {
             Cluster cluster = host.getCluster();
             Host endpointHost = hostRepository.getEndPointHost(cluster.getId());
@@ -86,13 +105,19 @@ public class EndpointUtils {
         return false;
     }
 
-    protected static void checkAndSetIfEndPointBad(LoadBalancerEndpointConfiguration config, Exception exc) throws AdapterException, Exception {
+
+    private void checkAndSetIfEndPointBadInternal(LoadBalancerEndpointConfiguration config, Exception exc) throws AdapterException, Exception {
         Host badHost = config.getHost();
         if (isConnectionExcept(exc)) {
             LOG.error(String.format("Endpoint %s went bad marking host[%d] as bad.", badHost.getEndpoint(), badHost.getId()));
             badHost.setEndpointActive(Boolean.FALSE);
             hostRepository.update(badHost);
         }
+    }
+
+    protected static void checkAndSetIfEndPointBad(LoadBalancerEndpointConfiguration config, Exception exc) throws AdapterException, Exception {
+        setEndpointUtilsSingleton();
+        endpointUtils.checkAndSetIfEndPointBadInternal(config, exc);
     }
 
 }

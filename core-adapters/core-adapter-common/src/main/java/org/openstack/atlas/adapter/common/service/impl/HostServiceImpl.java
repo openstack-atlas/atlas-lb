@@ -47,28 +47,28 @@ public class HostServiceImpl implements HostService {
 
     }
 
+    @Override
+    @Transactional(value="transactionManager2")
+    public final LoadBalancerHost getLoadBalancerHost(Integer loadBalancerId) {
+        return hostRepository.getLBHost(loadBalancerId);
+    }
 
     @Override
     public Host getDefaultActiveHost() {
 
-        LOG.debug("Before calling hostRepository.getHosts()");
         List<Host> hosts = hostRepository.getHosts();
 
-        LOG.debug(String.format("HostRepository.getHosts() retuned %d hosts", hosts.size()));
+
 
         if (hosts == null || hosts.size() <= 0) {
-            LOG.error("ACTIVE_TARGET host not found");
             return null;
         }
         if (hosts.size() == 1) {
             Host host = hosts.get(0);
-            LOG.debug("Host endpoint is " + host.getEndpoint());
             return (host);
         } else {
             Host host =  hostRepository.getHostWithMinimumLoadBalancers(hosts);
-            LOG.debug("Host endpoint is " + host.getEndpoint());
             return (host);
-
         }
     }
 }

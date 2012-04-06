@@ -9,4 +9,5 @@ public interface AdapterVirtualIpService {
     VirtualIpv4 createVirtualIpCluster(VirtualIpv4 vipCluster) throws PersistenceServiceException;
     VirtualIpv4 getVirtualIpCluster(Integer vipId);
     void removeAllVipsFromLoadBalancer(LoadBalancer lb);
+    void undoAllVipsFromLoadBalancer(LoadBalancer lb);
 }

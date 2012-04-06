@@ -147,9 +147,28 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
         }
     }
 
+    @Transactional(value="transactionManager2")
+    public void undoAllVipsFromLoadBalancer(LoadBalancer loadBalancer) {
+
+        if (!loadBalancer.getLoadBalancerJoinVipSet().isEmpty()) {
+
+            for (LoadBalancerJoinVip loadBalancerJoinVip : loadBalancer.getLoadBalancerJoinVipSet()) {
+
+                VirtualIp vip = loadBalancerJoinVip.getVirtualIp();
+                resetVirtualIp(vip);
+            }
+        }
+    }
+
     private void deallocateVirtualIp(VirtualIp vip)
     {
         adapterVirtualIpRepository.deallocateVirtualIp(vip);
+        vip.setAddress(null);
+    }
+
+    private void resetVirtualIp(VirtualIp vip)
+    {
+        adapterVirtualIpRepository.resetVirtualIp(vip);
         vip.setAddress(null);
     }
 
