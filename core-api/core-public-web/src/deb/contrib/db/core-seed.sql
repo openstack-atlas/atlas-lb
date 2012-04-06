@@ -1,8 +1,4 @@
-LOCK TABLES `virtual_ipv6` WRITE;
-/*!40000 ALTER TABLE `virtual_ipv6` DISABLE KEYS */;
-ALTER TABLE `virtual_ipv6` AUTO_INCREMENT = 9000000;
-/*!40000 ALTER TABLE `virtual_ipv6` ENABLE KEYS */;
-UNLOCK TABLES;
+
 
 
 

@@ -13,7 +13,7 @@ import java.util.Set;
         discriminatorType = DiscriminatorType.STRING
 )
 @DiscriminatorValue("CORE")
-@Table(name = "virtual_ipv4")
+@Table(name = "virtual_ip")
 public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity implements Serializable {
     private final static long serialVersionUID = 532512316L;
 
@@ -30,6 +30,9 @@ public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity 
     @Column(name = "type")
     private VirtualIpType vipType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ip_version")
+    private IpVersion ipVersion;
 
     public Set<LoadBalancerJoinVip> getLoadBalancerJoinVipSet() {
         if(loadBalancerJoinVipSet == null) loadBalancerJoinVipSet = new HashSet<LoadBalancerJoinVip>();
@@ -64,12 +67,24 @@ public class VirtualIp extends org.openstack.atlas.service.domain.entity.Entity 
         this.vipType = vipType;
     }
 
+
+    public IpVersion getIpVersion() {
+        return ipVersion;
+    }
+
+    public void setIpVersion(IpVersion ipVersion) {
+        this.ipVersion = ipVersion;
+    }
+
+
     @Override
     public String toString() {
         return "VirtualIp{" +
                 "loadBalancerJoinVipSet=" + loadBalancerJoinVipSet +
                 ", ipAddress='" + address + '\'' +
                 ", vipType=" + vipType +
+                ", ipAddress='" + address + '\'' +
+                ", ipVersion=" + ipVersion +
                 '}';
     }
 }

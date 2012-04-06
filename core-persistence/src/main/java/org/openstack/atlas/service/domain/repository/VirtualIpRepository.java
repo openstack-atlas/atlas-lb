@@ -31,4 +31,7 @@ public interface VirtualIpRepository {
     VirtualIp getById(Integer id) throws EntityNotFoundException;
 
     void removeVirtualIp(VirtualIp vip);
+
+    List<Integer> getAccountIdsAlreadyShaHashed();
+
 }

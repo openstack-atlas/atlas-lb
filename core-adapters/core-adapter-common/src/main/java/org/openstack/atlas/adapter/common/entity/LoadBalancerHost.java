@@ -7,12 +7,8 @@ import java.io.Serializable;
 
 @Entity
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(
-        name = "vendor",
-        discriminatorType = DiscriminatorType.STRING
-)
-@DiscriminatorValue("ADAPTER")
-@Table(name = "load_balancer_host")
+
+@Table(name = "adapter_load_balancer_host")
 public class LoadBalancerHost implements Serializable {
     private final static long serialVersionUID = 542572317L;
 

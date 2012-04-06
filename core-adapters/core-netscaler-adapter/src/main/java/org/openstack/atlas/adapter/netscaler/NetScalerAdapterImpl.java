@@ -99,14 +99,21 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
 
         nsAdapterUtils.performRequest("POST", resourceUrl, requestBody);
         } catch(Exception e) {
-            LOG.debug("Removing allocated Vips");
-            virtualIpService.removeAllVipsFromLoadBalancer(lb);
+            undoCreateLoadBalancer(lb, lbHost);
             throw new AdapterException("Error occurred while creating request or connecting to device : " + e.getMessage());
         }
 
     }
 
+    private void undoCreateLoadBalancer(LoadBalancer lb, LoadBalancerHost lbHost) {
 
+        try {
+            hostService.removeLoadBalancerHost(lbHost);
+            virtualIpService.removeAllVipsFromLoadBalancer(lb);
+        } catch (PersistenceServiceException e) {
+            LOG.error(String.format("Failed to remove LoadBalancerHost for lbId %d: %s", lb.getId(), e.getMessage()));
+        }
+    }
 
     @Override
     public void updateLoadBalancer(LoadBalancer lb)

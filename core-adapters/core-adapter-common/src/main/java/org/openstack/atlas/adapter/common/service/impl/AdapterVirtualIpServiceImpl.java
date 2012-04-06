@@ -3,13 +3,10 @@ package org.openstack.atlas.adapter.common.service.impl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openstack.atlas.adapter.common.entity.*;
+import org.openstack.atlas.common.ip.exception.IPStringConversionException1;
 import org.openstack.atlas.service.domain.common.Constants;
-import org.openstack.atlas.service.domain.entity.LoadBalancer;
-import org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip;
-import org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip6;
-import org.openstack.atlas.service.domain.entity.VirtualIp;
-import org.openstack.atlas.service.domain.entity.VirtualIpType;
-import org.openstack.atlas.service.domain.entity.VirtualIpv6;
+import org.openstack.atlas.service.domain.entity.*;
+
 import org.openstack.atlas.service.domain.exception.*;
 
 import org.openstack.atlas.adapter.common.service.AdapterVirtualIpService;
@@ -19,7 +16,7 @@ import org.openstack.atlas.adapter.common.repository.ClusterRepository;
 import org.openstack.atlas.adapter.common.repository.AdapterVirtualIpRepository;
 
 import org.openstack.atlas.service.domain.repository.VirtualIpRepository;
-import org.openstack.atlas.service.domain.repository.VirtualIpv6Repository;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,9 +48,6 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
     protected AdapterVirtualIpRepository adapterVirtualIpRepository;
 
     @Autowired
-    protected VirtualIpv6Repository virtualIpv6Repository;
-
-    @Autowired
     protected ClusterRepository clusterRepository;
 
     @Autowired
@@ -65,35 +59,40 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
     public LoadBalancer assignVipsToLoadBalancer(LoadBalancer loadBalancer) throws PersistenceServiceException {
 
         if (!loadBalancer.getLoadBalancerJoinVipSet().isEmpty()) {
+
             Set<LoadBalancerJoinVip> newVipConfig = new HashSet<LoadBalancerJoinVip>();
+
             for (LoadBalancerJoinVip loadBalancerJoinVip : loadBalancer.getLoadBalancerJoinVipSet()) {
                 // Add a new vip to set
+
+                VirtualIp vip = loadBalancerJoinVip.getVirtualIp();
+
                 LoadBalancerHost lbHost = hostRepository.getLBHost(loadBalancer.getId());
+
                 if (lbHost == null)
                     throw new PersistenceServiceException(new Exception(String.format("Cannot find host of loadbalancer %d", loadBalancer.getId())));
 
                 Host host = lbHost.getHost();
-                LOG.debug(String.format("The loadBalancer %d has the Host endpoint %s", lbHost.getLoadBalancerId(), lbHost.getHost().getEndpoint()));
-                allocateIpv4VirtualIp(loadBalancerJoinVip.getVirtualIp(), host.getCluster());
-            }
-        }
 
-        if (!loadBalancer.getLoadBalancerJoinVip6Set().isEmpty()) {
-            Set<LoadBalancerJoinVip6> newVip6Config = new HashSet<LoadBalancerJoinVip6>();
-            Set<LoadBalancerJoinVip6> loadBalancerJoinVip6SetConfig = loadBalancer.getLoadBalancerJoinVip6Set();
-            loadBalancer.setLoadBalancerJoinVip6Set(null);
-            for (LoadBalancerJoinVip6 loadBalancerJoinVip6 : loadBalancerJoinVip6SetConfig) {
-                VirtualIpv6 ipv6 = allocateIpv6VirtualIp(loadBalancer);
-                loadBalancerJoinVip6.setVirtualIp(ipv6);
-            }
+                Cluster cluster = host.getCluster();
 
+                String address;
+
+                if (vip.getIpVersion() == IpVersion.IPV4) {
+                    address = allocateIpv4VirtualIp(vip, loadBalancer.getAccountId(), cluster);
+                } else {
+                    address = allocateIpv6VirtualIp(vip, loadBalancer.getAccountId(), cluster);
+                }
+
+                vip.setAddress(address);
+            }
         }
 
         return loadBalancer;
     }
 
     @Transactional(value="transactionManager2")
-    public void allocateIpv4VirtualIp(VirtualIp virtualIp, Cluster cluster) throws OutOfVipsException {
+    public String allocateIpv4VirtualIp(VirtualIp virtualIp, Integer accountId, Cluster cluster) throws OutOfVipsException {
         Calendar timeConstraintForVipReuse = Calendar.getInstance();
         timeConstraintForVipReuse.add(Calendar.DATE, -Constants.NUM_DAYS_BEFORE_VIP_REUSE);
 
@@ -102,11 +101,11 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
         }
 
         try {
-            adapterVirtualIpRepository.allocateIpv4VipBeforeDate(virtualIp, cluster, timeConstraintForVipReuse);
+            return adapterVirtualIpRepository.allocateIpv4VipBeforeDate(virtualIp, cluster, timeConstraintForVipReuse);
         } catch (OutOfVipsException e) {
             LOG.warn(String.format("Out of IPv4 virtual ips that were de-allocated before '%s'.", timeConstraintForVipReuse.getTime()));
             try {
-                adapterVirtualIpRepository.allocateIpv4VipAfterDate(virtualIp, cluster, timeConstraintForVipReuse);
+                return adapterVirtualIpRepository.allocateIpv4VipAfterDate(virtualIp, cluster, timeConstraintForVipReuse);
             } catch (OutOfVipsException e2) {
                 e2.printStackTrace();
                 throw e2;
@@ -115,45 +114,44 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
     }
 
     @Transactional(value="transactionManager2")
-    public VirtualIpv6 allocateIpv6VirtualIp(LoadBalancer loadBalancer) throws EntityNotFoundException {
-        // Acquire lock on account row due to concurrency issue
-        virtualIpv6Repository.getLockedAccountRecord(loadBalancer.getAccountId());
+    public String allocateIpv6VirtualIp(VirtualIp vip, Integer accountId, Cluster c) throws EntityNotFoundException {
 
-        Integer vipOctets = adapterVirtualIpRepository.getNextVipOctet(loadBalancer.getAccountId());
+        Integer vipOctets = adapterVirtualIpRepository.getNextVipOctet(accountId);
 
-        LoadBalancerHost lbHost = hostRepository.getLBHost(loadBalancer.getId());
-        Host host = lbHost.getHost();
-        Cluster c = clusterRepository.getById(host.getCluster().getId());
 
-        VirtualIpv6 ipv6 = new VirtualIpv6();
-        ipv6.setAccountId(loadBalancer.getAccountId());  
-        virtualIpRepository.persist(ipv6);
+        VirtualIpv6 ipv6octets = new VirtualIpv6();
 
-        VirtualIpv6Octets ipv6octets = new VirtualIpv6Octets();
-
-        ipv6octets.setAccountId(loadBalancer.getAccountId());
+        ipv6octets.setAccountId(accountId);
         ipv6octets.setVipOctets(vipOctets);
-        ipv6octets.setVirtualIpv6Id(ipv6.getId());
-        virtualIpRepository.persist(ipv6octets);
-                
-        VirtualIpCluster vipCluster = new VirtualIpCluster(ipv6.getAddress(), VirtualIpType.PUBLIC, c);
+        ipv6octets.setVirtualIpId(vip.getId());
+        ipv6octets = adapterVirtualIpRepository.create(ipv6octets);
 
-
-        adapterVirtualIpRepository.createVirtualIpCluster(vipCluster);
-
-        return ipv6;
+        try {
+            return ipv6octets.getDerivedIpString(c);
+        } catch (IPStringConversionException1 e) {
+            LOG.error("Caught an exception while trying to convert IPv6 octets into a string");
+            return null;
+        }
     }
-
-
-
-
 
     @Transactional(value="transactionManager2")
-    public void removeAllVipsFromLoadBalancer(LoadBalancer lb) {
+    public void removeAllVipsFromLoadBalancer(LoadBalancer loadBalancer) {
 
+        if (!loadBalancer.getLoadBalancerJoinVipSet().isEmpty()) {
+
+            for (LoadBalancerJoinVip loadBalancerJoinVip : loadBalancer.getLoadBalancerJoinVipSet()) {
+
+                VirtualIp vip = loadBalancerJoinVip.getVirtualIp();
+                deallocateVirtualIp(vip);
+            }
+        }
     }
 
-
+    private void deallocateVirtualIp(VirtualIp vip)
+    {
+        adapterVirtualIpRepository.deallocateVirtualIp(vip);
+        vip.setAddress(null);
+    }
 
 
     @Transactional(value="transactionManager2")
@@ -171,44 +169,20 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
     }
 
 
-
-    @Transactional(value="transactionManager2")
-    public boolean isIpv6VipAllocatedToAnotherLoadBalancer(LoadBalancer lb, VirtualIpv6 virtualIp) {
-        List<LoadBalancerJoinVip6> joinRecords = virtualIpv6Repository.getJoinRecordsForVip(virtualIp);
-
-        for (LoadBalancerJoinVip6 joinRecord : joinRecords) {
-            if (!joinRecord.getLoadBalancer().getId().equals(lb.getId())) {
-                LOG.debug(String.format("IPv6 virtual ip '%d' is used by a load balancer other than load balancer '%d'.", virtualIp.getId(), lb.getId()));
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
-    public boolean isIpv4VipPortCombinationInUse(VirtualIp virtualIp, Integer loadBalancerPort) {
-        return virtualIpRepository.getPorts(virtualIp.getId()).containsKey(loadBalancerPort);
-    }
-
-    public boolean isIpv6VipPortCombinationInUse(VirtualIpv6 virtualIp, Integer loadBalancerPort) {
-        return virtualIpv6Repository.getPorts(virtualIp.getId()).containsKey(loadBalancerPort);
-    }
-
     @Override
     @Transactional(value="transactionManager2")
-    public final VirtualIpCluster createVirtualIpCluster(VirtualIpCluster vipCluster) throws PersistenceServiceException {
+    public final VirtualIpv4 createVirtualIpCluster(VirtualIpv4 vipCluster) throws PersistenceServiceException {
 
-        VirtualIpCluster dbVipCluster = adapterVirtualIpRepository.createVirtualIpCluster(vipCluster);
+        VirtualIpv4 dbVipCluster = adapterVirtualIpRepository.createVirtualIpCluster(vipCluster);
 
         return dbVipCluster;
     }
 
     @Override
     @Transactional(value="transactionManager2")
-    public final VirtualIpCluster getVirtualIpCluster(Integer vipId) {
+    public final VirtualIpv4 getVirtualIpCluster(Integer vipId) {
 
-        VirtualIpCluster dbVipCluster = adapterVirtualIpRepository.getVirtualIpCluster(vipId);
+        VirtualIpv4 dbVipCluster = adapterVirtualIpRepository.getVirtualIpCluster(vipId);
 
         return dbVipCluster;
     }

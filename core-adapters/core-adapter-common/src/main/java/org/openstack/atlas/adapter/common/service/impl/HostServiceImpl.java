@@ -26,7 +26,6 @@ public class HostServiceImpl implements HostService {
     @Transactional(value="transactionManager2")
     public final LoadBalancerHost createLoadBalancerHost(LoadBalancerHost lbHost) throws PersistenceServiceException {
 
-        LOG.debug("At start of createLoadBalacerHost");
         try {
             LoadBalancerHost dbLoadBalancerHost = hostRepository.createLoadBalancerHost(lbHost);
             return dbLoadBalancerHost;
@@ -35,6 +34,19 @@ public class HostServiceImpl implements HostService {
         }
 
     }
+
+    @Override
+    @Transactional(value="transactionManager2")
+    public final void removeLoadBalancerHost(LoadBalancerHost lbHost) throws PersistenceServiceException {
+
+        try {
+            hostRepository.removeLoadBalancerHost(lbHost);
+        } catch (Exception e) {
+            throw new PersistenceServiceException(e);
+        }
+
+    }
+
 
     @Override
     public Host getDefaultActiveHost() {

@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.openstack.atlas.adapter.common.entity.Cluster;
-import org.openstack.atlas.adapter.common.entity.VirtualIpCluster;
+import org.openstack.atlas.adapter.common.entity.VirtualIpv4;
 import org.openstack.atlas.common.ip.IPv6;
 import org.openstack.atlas.datamodel.CoreLoadBalancerStatus;
 import org.openstack.atlas.service.domain.entity.LoadBalancer;
@@ -198,7 +198,7 @@ public class NodeServiceITest {
         @Test(expected = BadRequestException.class)
         public void shouldThrowExceptionWhenAddressForIPV6InvalidForUse() throws Exception {
             VirtualIpv6 virtualIpv6 = loadBalancer.getVirtualIpDozerWrapper().getLoadBalancerJoinVip6Set().iterator().next().getVirtualIp();
-            VirtualIpCluster vipCluster = adapterVirtualIpService.getVirtualIpCluster(virtualIpv6.getId());
+            VirtualIpv4 vipCluster = adapterVirtualIpService.getVirtualIpCluster(virtualIpv6.getId());
             Cluster cluster = vipCluster.getCluster();
             String derivedIpString = IPv6.getDerivedIpString(cluster.getClusterIpv6Cidr(), cluster.getId(), virtualIpv6.getAccountId(), virtualIpv6.getVipOctets());
 

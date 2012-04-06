@@ -13,13 +13,9 @@ import java.util.Calendar;
 
 @javax.persistence.Entity
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(
-        name = "vendor",
-        discriminatorType = DiscriminatorType.STRING
-)
-@DiscriminatorValue("ADAPTER")
-@Table(name = "virtual_ip_cluster")
-public class VirtualIpCluster implements Serializable {
+
+@Table(name = "adapter_virtual_ipv4")
+public class VirtualIpv4 implements Serializable {
     private final static long serialVersionUID = 549512317L;
 
 
@@ -53,10 +49,10 @@ public class VirtualIpCluster implements Serializable {
 
 
 
-    public VirtualIpCluster()
+    public VirtualIpv4()
     {}
 
-    public VirtualIpCluster(String address, VirtualIpType vipType, Cluster cluster) {
+    public VirtualIpv4(String address, VirtualIpType vipType, Cluster cluster) {
         this.address = address;
         this.vipType = vipType;
         this.cluster= cluster;

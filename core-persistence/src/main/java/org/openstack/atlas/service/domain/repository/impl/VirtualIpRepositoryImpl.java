@@ -97,8 +97,8 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
 
     @Override
     public void removeVirtualIp(VirtualIp vip) {
-        VirtualIp virtualIp = entityManager.find(VirtualIp.class, vip.getId());
-        entityManager.remove(virtualIp);
+        vip = entityManager.find(VirtualIp.class, vip.getId());
+        entityManager.remove(vip);
     }
 
 
@@ -138,4 +138,12 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
         criteria.where(recordWithId);
         return entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).getSingleResult();
     }
+
+
+
+    @Override
+    public List<Integer> getAccountIdsAlreadyShaHashed() {
+        return entityManager.createQuery("select a.id from Account a").getResultList();
+    }
+
 }

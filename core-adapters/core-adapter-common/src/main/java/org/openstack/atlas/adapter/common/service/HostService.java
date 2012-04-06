@@ -7,4 +7,5 @@ import org.openstack.atlas.service.domain.exception.PersistenceServiceException;
 public interface HostService {
     Host getDefaultActiveHost();
     LoadBalancerHost createLoadBalancerHost(LoadBalancerHost lbHost) throws PersistenceServiceException;
+    void removeLoadBalancerHost(LoadBalancerHost lbHost) throws PersistenceServiceException;
 }

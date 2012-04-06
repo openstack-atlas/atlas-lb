@@ -52,9 +52,6 @@ public class LoadBalancer extends Entity implements Serializable {
     @OneToMany(mappedBy = "loadBalancer", fetch = FetchType.EAGER)
     private Set<LoadBalancerJoinVip> loadBalancerJoinVipSet = new HashSet<LoadBalancerJoinVip>();
 
-    @OneToMany(mappedBy = "loadBalancer", fetch = FetchType.EAGER)
-    private Set<LoadBalancerJoinVip6> loadBalancerJoinVip6Set = new HashSet<LoadBalancerJoinVip6>();
-
     @OrderBy("id")
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "loadBalancer", orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<Node> nodes = new HashSet<Node>();
@@ -217,22 +214,14 @@ public class LoadBalancer extends Entity implements Serializable {
     public void setIpv4Public(String throwaway) {
     }
 
-    public Set<LoadBalancerJoinVip6> getLoadBalancerJoinVip6Set() {
-        return loadBalancerJoinVip6Set;
-    }
-
-    public void setLoadBalancerJoinVip6Set(Set<LoadBalancerJoinVip6> loadBalancerJoinVip6Set) {
-        this.loadBalancerJoinVip6Set = loadBalancerJoinVip6Set;
-    }
-
     public VirtualIpDozerWrapper getVirtualIpDozerWrapper() {
-        return new VirtualIpDozerWrapper(loadBalancerJoinVipSet, loadBalancerJoinVip6Set);
+        return new VirtualIpDozerWrapper(loadBalancerJoinVipSet);
     }
+
 
     public void setVirtualIpDozerWrapper(VirtualIpDozerWrapper virtualIpDozerWrapper) {
         this.virtualIpDozerWrapper = virtualIpDozerWrapper;
         this.setLoadBalancerJoinVipSet(this.virtualIpDozerWrapper.getLoadBalancerJoinVipSet());
-        this.setLoadBalancerJoinVip6Set(this.virtualIpDozerWrapper.getLoadBalancerJoinVip6Set());
     }
 
     public SessionPersistence getSessionPersistence() {

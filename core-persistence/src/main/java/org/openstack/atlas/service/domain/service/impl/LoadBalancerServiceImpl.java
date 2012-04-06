@@ -6,7 +6,6 @@ import org.openstack.atlas.datamodel.CoreLoadBalancerStatus;
 import org.openstack.atlas.service.domain.common.*;
 import org.openstack.atlas.service.domain.entity.LoadBalancer;
 import org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip;
-import org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip6;
 import org.openstack.atlas.service.domain.exception.BadRequestException;
 import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.openstack.atlas.service.domain.exception.LimitReachedException;

@@ -11,13 +11,9 @@ import java.util.Set;
 
 @javax.persistence.Entity
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(
-        name = "vendor",
-        discriminatorType = DiscriminatorType.STRING
-)
-@DiscriminatorValue("ADAPTER")
-@Table(name = "adapter_vip_octets")
-public class VirtualIpv6Octets implements Serializable {
+
+@Table(name = "adapter_virtual_ipv6")
+public class VirtualIpv6 implements Serializable {
     private final static long serialVersionUID = 532712316L;
 
 
@@ -26,17 +22,17 @@ public class VirtualIpv6Octets implements Serializable {
 
     @Id
     @Column(name = "vip_id", nullable = false)
-    private Integer virtualIpv6Id;
+    private Integer virtualIpId;
     
     @Column(name = "vip_octets", nullable = false)
     private Integer vipOctets;
 
-    public Integer getVirtualIpv6Id() {
-        return virtualIpv6Id;
+    public Integer getVirtualIpId() {
+        return virtualIpId;
     }
 
-    public void setVirtualIpv6Id(Integer virtualIpv6Id) {
-        this.virtualIpv6Id = virtualIpv6Id;
+    public void setVirtualIpId(Integer virtualIpv6Id) {
+        this.virtualIpId = virtualIpv6Id;
     }    
         
     public Integer getAccountId() {

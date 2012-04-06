@@ -9,11 +9,7 @@ import java.util.Set;
 
 @javax.persistence.Entity
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(
-        name = "vendor",
-        discriminatorType = DiscriminatorType.STRING
-)
-@DiscriminatorValue("ADAPTER")
+
 @Table(name = "adapter_cluster")
 public class Cluster extends org.openstack.atlas.service.domain.entity.Entity implements Serializable {
     private final static long serialVersionUID = 532512316L;

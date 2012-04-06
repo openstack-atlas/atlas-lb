@@ -324,13 +324,15 @@ public class StubFactory {
         return virtualIp;
     }
 
-    public static LoadBalancerJoinVip6 createHydratedDomainVirtualIpv6() {
+    public static LoadBalancerJoinVip createHydratedDomainVirtualIpv6() {
         LoadBalancer loadBalancer = createHydratedDomainLoadBalancer();
-        VirtualIpv6 virtualIpv6 = new VirtualIpv6();
-        virtualIpv6.setAccountId(loadBalancer.getAccountId());
+        VirtualIp virtualIp = new VirtualIp();
+        virtualIp.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.IPV6);
 
+        virtualIp.setVipType(VirtualIpType.PUBLIC);
+        virtualIp.setAccountId(loadBalancer.getAccountId());
 
-        return new LoadBalancerJoinVip6(LOAD_BALANCER_PORT, loadBalancer, virtualIpv6);
+        return new LoadBalancerJoinVip(LOAD_BALANCER_PORT, loadBalancer, virtualIp);
     }
 
     public static LoadBalancerJoinVip createHydratedLoadBalancerJoinVip() {

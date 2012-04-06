@@ -65,8 +65,6 @@ public class LoadBalancerRepositoryImpl implements LoadBalancerRepository {
 
         final Set<LoadBalancerJoinVip> lbJoinVipsToLink = loadBalancer.getLoadBalancerJoinVipSet();
         loadBalancer.setLoadBalancerJoinVipSet(null);
-        final Set<LoadBalancerJoinVip6> lbJoinVip6sToLink = loadBalancer.getLoadBalancerJoinVip6Set();
-        loadBalancer.setLoadBalancerJoinVip6Set(null);
 
         Calendar current = Calendar.getInstance();
         loadBalancer.setCreated(current);
@@ -79,46 +77,16 @@ public class LoadBalancerRepositoryImpl implements LoadBalancerRepository {
         for (LoadBalancerJoinVip lbJoinVipToLink : lbJoinVipsToLink) {
 
             lbJoinVipToLink.setLoadBalancer(loadBalancer);
-            LOG.debug("About to persist a LoadBalancerJoinVip: lbId = " + lbJoinVipToLink.getLoadBalancer().getId());
-            LOG.debug("About to persist a LoadBalancerJoinVip: before merging: vip id = " + lbJoinVipToLink.getVirtualIp().getId());
             lbJoinVipToLink = entityManager.merge(lbJoinVipToLink);
-            LOG.debug("About to persist a LoadBalancerJoinVip: after merging: vip id = " + lbJoinVipToLink.getVirtualIp().getId());
-            LOG.debug("About to persist a LoadBalancerJoinVip: after merging: lbId = " + lbJoinVipToLink.getLoadBalancer().getId());
             newLbJoinVipSet.add(lbJoinVipToLink);
-            LOG.debug("Successfully merged LoadBalancerJoinVip");
         }
 
         loadBalancer.setLoadBalancerJoinVipSet(newLbJoinVipSet);
 
-        Set<LoadBalancerJoinVip6> newLbJoinVip6Set = new HashSet<LoadBalancerJoinVip6>();
 
-         LOG.debug("Step 1");
-        for (LoadBalancerJoinVip6 jv6 : lbJoinVip6sToLink) {
-            LOG.debug("Step 2");
-            jv6.setLoadBalancer(loadBalancer);
-            jv6 =  entityManager.merge(jv6);
-            newLbJoinVip6Set.add(jv6);
-            LOG.debug("Step 3");
-        }
-        LOG.debug("Step 4");
-        loadBalancer.setLoadBalancerJoinVip6Set(newLbJoinVip6Set);
-        LOG.debug("Step 5");
-        entityManager.flush();
-        LOG.debug("Step 6");
+
         return loadBalancer;
     }
-
-/*    @Transactional
-    private void joinIpv6OnLoadBalancer(LoadBalancer lb) {
-        Set<LoadBalancerJoinVip6> loadBalancerJoinVip6SetConfig = lb.getLoadBalancerJoinVip6Set();
-        lb.setLoadBalancerJoinVip6Set(null);
-        Set<LoadBalancerJoinVip6> newLbVip6Setconfig = new HashSet<LoadBalancerJoinVip6>();
-        lb.setLoadBalancerJoinVip6Set(newLbVip6Setconfig);
-        for (LoadBalancerJoinVip6 jv6 : loadBalancerJoinVip6SetConfig) {
-            LoadBalancerJoinVip6 jv = new LoadBalancerJoinVip6(lb.getPort(), lb, jv6.getVirtualIp());
-            entityManager.persist(jv);
-        }
-    }*/
 
     protected void setLbIdOnChildObjects(final LoadBalancer loadBalancer) {
         if (loadBalancer.getNodes() != null) {
