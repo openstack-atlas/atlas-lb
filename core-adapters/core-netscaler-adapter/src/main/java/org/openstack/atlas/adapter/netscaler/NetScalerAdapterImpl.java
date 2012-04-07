@@ -155,6 +155,28 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         }
     }
 
+    @Override
+    public void updateLoadBalancer(LoadBalancer lb)
+        throws AdapterException 
+    {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lb.getId());
+		String serviceUrl = config.getHost().getEndpoint();
+
+        String resourceType = "loadbalancers";
+        Integer resourceId = lb.getId();
+
+        Integer accountId = lb.getAccountId(); 
+        
+        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer();
+        nsAdapterUtils.populateNSLoadBalancerForUpdate(lb, nsLB);
+        
+		String requestBody = nsAdapterUtils.getRequestBody(nsLB);
+
+		String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId);
+		nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
+    }
+
     private void removeLoadBalancerAdapterResources(LoadBalancer lb) {
 
         try {
@@ -166,26 +188,6 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
         }
     }
 
-    @Override
-    public void updateLoadBalancer(LoadBalancer lb)
-        throws AdapterException 
-    {
-
-        LoadBalancerEndpointConfiguration config = getConfig(lb.getId());
-
-        String resourceType = "loadbalancers";
-        Integer resourceId = lb.getId();
-
-        Integer accountId = lb.getAccountId(); 
-        
-        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer();
-        nsAdapterUtils.populateNSLoadBalancerForUpdate(lb, nsLB);
-        
-		String requestBody = nsAdapterUtils.getRequestBody(nsLB);
-		String serviceUrl = config.getHost().getEndpoint();
-		String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId);
-		nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
-    }
 
     @Override
     public void deleteLoadBalancer(LoadBalancer lb)
