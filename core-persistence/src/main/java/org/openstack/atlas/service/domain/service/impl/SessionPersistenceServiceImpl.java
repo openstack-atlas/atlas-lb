@@ -28,7 +28,7 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
     protected SessionPersistenceRepository sessionPersistenceRepository;
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class})
     public SessionPersistence update(Integer loadBalancerId, SessionPersistence sessionPersistence) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException, BadRequestException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getById(loadBalancerId);
         SessionPersistence dbSessionPersistence = dbLoadBalancer.getSessionPersistence();
@@ -45,14 +45,14 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
     }
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class})
     public void preDelete(Integer loadBalancerId) throws EntityNotFoundException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getById(loadBalancerId);
         if (dbLoadBalancer.getSessionPersistence() == null) throw new EntityNotFoundException("Session persistence not found");
     }
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class})
     public void delete(Integer loadBalancerId) throws EntityNotFoundException {
         sessionPersistenceRepository.delete(sessionPersistenceRepository.getByLoadBalancerId(loadBalancerId));
     }

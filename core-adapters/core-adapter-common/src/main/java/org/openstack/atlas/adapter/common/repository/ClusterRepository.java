@@ -12,10 +12,11 @@ import javax.persistence.PersistenceContext;
 
 
 @Repository
-@Transactional(value="transactionManager2")
+@Transactional(value="adapter_transactionManager")
 public class ClusterRepository {
 
     final Log LOG = LogFactory.getLog(ClusterRepository.class);
+
     @PersistenceContext(unitName = "loadbalancingadapter")
     private EntityManager entityManager;
 

@@ -18,7 +18,7 @@ import javax.persistence.Query;
 import java.util.*;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class LoadBalancerEventRepository {
 
     final Log LOG = LogFactory.getLog(LoadBalancerEventRepository.class);

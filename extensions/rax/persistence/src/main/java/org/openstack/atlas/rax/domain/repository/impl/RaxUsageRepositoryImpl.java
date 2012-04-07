@@ -17,7 +17,7 @@ import java.util.Set;
 
 @Primary
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class RaxUsageRepositoryImpl extends UsageRepositoryImpl {
 
     @Override

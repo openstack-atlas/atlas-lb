@@ -18,7 +18,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class ConnectionThrottleRepositoryImpl implements ConnectionThrottleRepository {
     final Log LOG = LogFactory.getLog(ConnectionThrottleRepositoryImpl.class);
     private static final String entityNotFound = "Connection throttle not found";

@@ -20,7 +20,7 @@ import javax.persistence.criteria.Root;
 import java.util.*;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class VirtualIpRepositoryImpl implements VirtualIpRepository {
     private final Log LOG = LogFactory.getLog(VirtualIpRepositoryImpl.class);
     @PersistenceContext(unitName = "loadbalancing")

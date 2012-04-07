@@ -24,7 +24,7 @@ public class RaxHostServiceImpl implements RaxHostService {
     @Autowired
     private RaxClusterRepository raxClusterRepository;
 
-    @Transactional
+    @Transactional(value="core_transactionManager")
     @Override
     public void create(RaxHost raxHost) throws EntityNotFoundException, UnprocessableEntityException {
         RaxCluster raxCluster = raxClusterRepository.getById(raxHost.getCluster().getId());

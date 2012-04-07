@@ -36,7 +36,7 @@ public class RaxVirtualIpServiceImpl extends VirtualIpServiceImpl implements Rax
     private LoadBalancerRepository loadBalancerRepository;
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class, UnprocessableEntityException.class, ImmutableEntityException.class, BadRequestException.class, OutOfVipsException.class, UniqueLbPortViolationException.class, AccountMismatchException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class, UnprocessableEntityException.class, ImmutableEntityException.class, BadRequestException.class, OutOfVipsException.class, UniqueLbPortViolationException.class, AccountMismatchException.class})
     public VirtualIpv6 addIpv6VirtualIpToLoadBalancer(VirtualIpv6 vipConfig, LoadBalancer lb) throws PersistenceServiceException {
         VirtualIpv6 vipToAdd;
         LoadBalancer dlb = loadBalancerRepository.getByIdAndAccountId(lb.getId(), lb.getAccountId());
@@ -66,7 +66,7 @@ public class RaxVirtualIpServiceImpl extends VirtualIpServiceImpl implements Rax
     }
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class, BadRequestException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class, BadRequestException.class})
     public void prepareForVirtualIpDeletion(LoadBalancer lb, Integer vipId) throws PersistenceServiceException {
         List<Integer> vipIdsToDelete = new ArrayList<Integer>();
         vipIdsToDelete.add(vipId);
@@ -83,7 +83,7 @@ public class RaxVirtualIpServiceImpl extends VirtualIpServiceImpl implements Rax
     }
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class, BadRequestException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class, BadRequestException.class})
     public void prepareForVirtualIpsDeletion(Integer accountId, Integer loadbalancerId, List<Integer> virtualIpIds) throws PersistenceServiceException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getByIdAndAccountId(loadbalancerId, accountId);
 
@@ -106,7 +106,7 @@ public class RaxVirtualIpServiceImpl extends VirtualIpServiceImpl implements Rax
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public boolean hasAtLeastMinRequiredVips(LoadBalancer lb, List<Integer> virtualIpIds) {
         Long numVipsAssignedToLoadBalancer = ((RaxVirtualIpRepository) virtualIpRepository).getNumIpv4VipsForLoadBalancer(lb);
         numVipsAssignedToLoadBalancer += ((RaxVirtualIpv6Repository) virtualIpv6Repository).getNumIpv6VipsForLoadBalancer(lb);
@@ -115,7 +115,7 @@ public class RaxVirtualIpServiceImpl extends VirtualIpServiceImpl implements Rax
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public boolean hasExactlyMinRequiredVips(LoadBalancer lb) {
         Long numVipsAssignedToLoadBalancer = ((RaxVirtualIpRepository) virtualIpRepository).getNumIpv4VipsForLoadBalancer(lb);
         numVipsAssignedToLoadBalancer += ((RaxVirtualIpv6Repository) virtualIpv6Repository).getNumIpv6VipsForLoadBalancer(lb);
@@ -140,7 +140,7 @@ public class RaxVirtualIpServiceImpl extends VirtualIpServiceImpl implements Rax
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public boolean doesVipBelongToLoadBalancer(LoadBalancer lb, Integer vipId) {
         List<VirtualIp> vipsForLb = virtualIpRepository.getVipsByLoadBalancerId(lb.getId());
         for (VirtualIp vipForLb : vipsForLb) {
@@ -160,7 +160,7 @@ public class RaxVirtualIpServiceImpl extends VirtualIpServiceImpl implements Rax
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public boolean doesVipBelongToAccount(VirtualIp virtualIp, Integer accountId) {
         List<Integer> accountsUsingVip = ((RaxVirtualIpRepository) virtualIpRepository).getAccountIds(virtualIp);
         if (accountsUsingVip.size() > Constants.MIN_ACCOUNTS_PER_VIP) {
@@ -177,7 +177,7 @@ public class RaxVirtualIpServiceImpl extends VirtualIpServiceImpl implements Rax
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public void removeVipsFromLoadBalancer(LoadBalancer lb, List<Integer> vipIdsToDelete) {
         for (Integer vipIdToDelete : vipIdsToDelete) {
             removeVipFromLoadBalancer(lb, vipIdToDelete);
@@ -185,7 +185,7 @@ public class RaxVirtualIpServiceImpl extends VirtualIpServiceImpl implements Rax
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public void removeVipFromLoadBalancer(LoadBalancer lb, Integer vipId) {
         for (LoadBalancerJoinVip loadBalancerJoinVip : lb.getLoadBalancerJoinVipSet()) {
             if (loadBalancerJoinVip.getVirtualIp().getId().equals(vipId)) {

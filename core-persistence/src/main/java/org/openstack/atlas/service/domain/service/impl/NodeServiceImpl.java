@@ -46,7 +46,7 @@ public class NodeServiceImpl extends BaseService implements NodeService {
     protected AccountLimitService accountLimitService;
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public Set<Node> createNodes(LoadBalancer loadBalancer) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException, BadRequestException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getByIdAndAccountId(loadBalancer.getId(), loadBalancer.getAccountId());
         isLbActive(dbLoadBalancer);
@@ -99,7 +99,7 @@ public class NodeServiceImpl extends BaseService implements NodeService {
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public LoadBalancer updateNode(LoadBalancer loadBalancer) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getByIdAndAccountId(loadBalancer.getId(), loadBalancer.getAccountId());
 

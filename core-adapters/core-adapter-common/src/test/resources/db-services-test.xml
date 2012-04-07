@@ -10,15 +10,15 @@
     <context:annotation-config/>
 
     <!--STANDALONE SPRING SETTINGS-->
-    <bean id="entityManagerFactory1" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    <bean id="adapter_entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="persistenceXmlLocation" value="lb-persistence.xml"/>
-        <property name="persistenceUnitName" value="loadbalancing"/>
+        <property name="persistenceUnitName" value="loadbalancingadapter"/>
         <property name="dataSource" ref="loadbalancingDataSource"/>
     </bean>
 
-    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-        <property name="entityManagerFactory" ref="entityManagerFactory1"/>
-        <property name="dataSource" ref="loadbalancingDataSource"/>
+    <bean id="adapter_transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="adapter_entityManagerFactory"/>
+        <property name="dataSource" ref="loadbalancingAdapterDataSource"/>
     </bean>
 
     <!-- Database connection settings -->

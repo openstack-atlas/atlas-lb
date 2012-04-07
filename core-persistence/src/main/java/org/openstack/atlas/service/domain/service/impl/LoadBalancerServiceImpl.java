@@ -39,7 +39,7 @@ public class LoadBalancerServiceImpl implements LoadBalancerService {
     protected VirtualIpService virtualIpService;
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public final LoadBalancer create(final LoadBalancer loadBalancer) throws PersistenceServiceException {
 
         try {
@@ -62,7 +62,7 @@ public class LoadBalancerServiceImpl implements LoadBalancerService {
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public LoadBalancer update(final LoadBalancer loadBalancer) throws PersistenceServiceException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getByIdAndAccountId(loadBalancer.getId(), loadBalancer.getAccountId());
 
@@ -77,7 +77,7 @@ public class LoadBalancerServiceImpl implements LoadBalancerService {
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public void preDelete(final Integer accountId, final Integer loadBalancerId) throws PersistenceServiceException {
         List<Integer> loadBalancerIds = new ArrayList<Integer>();
         loadBalancerIds.add(loadBalancerId);
@@ -85,7 +85,7 @@ public class LoadBalancerServiceImpl implements LoadBalancerService {
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public void preDelete(final Integer accountId, final List<Integer> loadBalancerIds) throws PersistenceServiceException {
         validateDelete(accountId, loadBalancerIds);
         for (int lbId : loadBalancerIds) {
@@ -94,7 +94,7 @@ public class LoadBalancerServiceImpl implements LoadBalancerService {
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public void delete(final LoadBalancer lb) throws PersistenceServiceException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getByIdAndAccountId(lb.getId(), lb.getAccountId());
         dbLoadBalancer.setStatus(CoreLoadBalancerStatus.DELETED);

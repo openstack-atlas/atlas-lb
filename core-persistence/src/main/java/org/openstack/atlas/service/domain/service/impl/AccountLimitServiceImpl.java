@@ -29,7 +29,7 @@ public class AccountLimitServiceImpl implements AccountLimitService {
     private LoadBalancerRepository loadBalancerRepository;
 
     @Override
-    @Transactional(rollbackFor = {EntityExistsException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityExistsException.class})
     public AccountLimit create(Integer accountId, AccountLimit accountLimit) throws PersistenceServiceException {
         List<AccountLimit> allAccountLimits = accountLimitRepository.getAccountLimits(accountId);
 
@@ -68,7 +68,7 @@ public class AccountLimitServiceImpl implements AccountLimitService {
     }
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class})
     public void delete(Integer accountId) throws EntityNotFoundException {
         for (AccountLimit accountLimit : accountLimitRepository.getCustomLimitsByAccountId(accountId)) {
             accountLimitRepository.delete(accountLimit);

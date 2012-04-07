@@ -26,7 +26,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
 
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public LoadBalancer assignVipsToLoadBalancer(LoadBalancer loadBalancer) throws PersistenceServiceException {
 
         Set<LoadBalancerJoinVip> loadBalancerJoinVipSetConfig = loadBalancer.getLoadBalancerJoinVipSet();
@@ -74,7 +74,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public void updateLoadBalancerVips(LoadBalancer loadBalancer) throws PersistenceServiceException {
 
         Set<LoadBalancerJoinVip> loadBalancerJoinVipSetConfig = loadBalancer.getLoadBalancerJoinVipSet();
@@ -122,7 +122,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
     }
 
 
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public void addAccountRecord(Integer accountId) throws NoSuchAlgorithmException {
 
         Set<Integer> accountsInAccount = new HashSet<Integer>(virtualIpRepository.getAccountIdsAlreadyShaHashed());
@@ -164,7 +164,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
         return sharedVips;
     }
    
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public void updateIpv4VirtualIp(LoadBalancer loadBalancer, VirtualIp vip) throws EntityNotFoundException {
         // Acquire lock on account row due to concurrency issue
         virtualIpRepository.getLockedAccountRecord(loadBalancer.getAccountId());
@@ -172,14 +172,14 @@ public class VirtualIpServiceImpl implements VirtualIpService {
 
     }
 
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public void setVirtualIpAccount(LoadBalancer loadBalancer, VirtualIp vip) throws EntityNotFoundException {
         // Acquire lock on account row due to concurrency issue
         virtualIpRepository.getLockedAccountRecord(loadBalancer.getAccountId());
         vip.setAccountId(loadBalancer.getAccountId());
     }
         
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public VirtualIp allocateIpv6VirtualIp(LoadBalancer loadBalancer) throws EntityNotFoundException {
 
 
@@ -198,7 +198,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
     }
 
 
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public void removeAllVipsFromLoadBalancer(LoadBalancer lb) {
         for (LoadBalancerJoinVip loadBalancerJoinVip : lb.getLoadBalancerJoinVipSet()) {
             virtualIpRepository.removeJoinRecord(loadBalancerJoinVip);
@@ -218,7 +218,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
 
 
 
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public boolean isVipAllocatedToAnotherLoadBalancer(LoadBalancer lb, VirtualIp virtualIp) {
         List<LoadBalancerJoinVip> joinRecords = virtualIpRepository.getJoinRecordsForVip(virtualIp);
 

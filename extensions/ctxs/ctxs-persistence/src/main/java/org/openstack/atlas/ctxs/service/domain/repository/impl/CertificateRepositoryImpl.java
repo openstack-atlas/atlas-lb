@@ -18,7 +18,7 @@ import javax.persistence.Query;
 import java.util.List;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class CertificateRepositoryImpl implements CertificateRepository {
     final Log LOG = LogFactory.getLog(CertificateRepositoryImpl.class);
     @PersistenceContext(unitName = "loadbalancing")

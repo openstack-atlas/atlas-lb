@@ -32,7 +32,7 @@ import java.util.*;
 
 
 @Repository
-@Transactional(value="transactionManager2")
+@Transactional(value="adapter_transactionManager")
 public class AdapterVirtualIpRepository  {
     private final Log LOG = LogFactory.getLog(AdapterVirtualIpRepository.class);
 

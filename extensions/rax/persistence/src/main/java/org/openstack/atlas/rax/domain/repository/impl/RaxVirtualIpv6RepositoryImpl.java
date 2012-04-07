@@ -14,7 +14,7 @@ import javax.persistence.criteria.*;
 
 @Primary
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class RaxVirtualIpv6RepositoryImpl extends VirtualIpv6RepositoryImpl implements RaxVirtualIpv6Repository {
 
     @Override

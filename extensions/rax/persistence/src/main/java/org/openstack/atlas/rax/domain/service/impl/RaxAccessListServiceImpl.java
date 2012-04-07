@@ -58,7 +58,7 @@ public class RaxAccessListServiceImpl extends BaseService implements RaxAccessLi
         return dbLoadBalancer;
     }
 
-    @Transactional
+    @Transactional(value="core_transactionManager")
     @Override
     public LoadBalancer markAccessListForDeletion(Integer accountId, Integer loadBalancerId) throws EntityNotFoundException, UnprocessableEntityException, ImmutableEntityException, DeletedStatusException {
         RaxLoadBalancer dbLoadBalancer = (RaxLoadBalancer) loadBalancerRepository.getByIdAndAccountId(loadBalancerId, accountId);
@@ -72,7 +72,7 @@ public class RaxAccessListServiceImpl extends BaseService implements RaxAccessLi
     }
 
     @Override
-    @Transactional
+    @Transactional(value="core_transactionManager")
     public LoadBalancer markNetworkItemsForDeletion(Integer accountId, Integer loadBalancerId, List<Integer> networkItemIds) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException {
         RaxLoadBalancer dbLoadBalancer = (RaxLoadBalancer) loadBalancerRepository.getByIdAndAccountId(loadBalancerId, accountId);
         isLbActive(dbLoadBalancer);
@@ -97,7 +97,7 @@ public class RaxAccessListServiceImpl extends BaseService implements RaxAccessLi
         return dbLoadBalancer;
     }
 
-    @Transactional
+    @Transactional(value="core_transactionManager")
     @Override
     public LoadBalancer markNetworkItemForDeletion(Integer accountId, Integer loadBalancerId, Integer networkItem) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException {
         List<Integer> networkItems = new ArrayList<Integer>();

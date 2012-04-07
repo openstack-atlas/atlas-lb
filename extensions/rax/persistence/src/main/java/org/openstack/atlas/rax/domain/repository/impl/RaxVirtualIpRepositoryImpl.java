@@ -16,7 +16,7 @@ import java.util.List;
 
 @Primary
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class RaxVirtualIpRepositoryImpl extends VirtualIpRepositoryImpl implements RaxVirtualIpRepository {
 
     @Override

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class LoadBalancerRepositoryImpl implements LoadBalancerRepository {
 
     final Log LOG = LogFactory.getLog(LoadBalancerRepositoryImpl.class);

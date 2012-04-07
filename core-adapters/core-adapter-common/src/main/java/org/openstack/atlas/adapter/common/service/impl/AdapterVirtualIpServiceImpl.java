@@ -41,21 +41,15 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
     private final Log LOG = LogFactory.getLog(AdapterVirtualIpServiceImpl.class);
 
     @Autowired
-    protected VirtualIpRepository virtualIpRepository;
-
-
-    @Autowired
     protected AdapterVirtualIpRepository adapterVirtualIpRepository;
 
-    @Autowired
-    protected ClusterRepository clusterRepository;
 
     @Autowired
     protected HostRepository hostRepository;
 
 
     @Override
-    @Transactional(value="transactionManager2")
+    @Transactional(value="adapter_transactionManager")
     public LoadBalancer assignVipsToLoadBalancer(LoadBalancer loadBalancer) throws PersistenceServiceException, EntityNotFoundException {
 
         if (!loadBalancer.getLoadBalancerJoinVipSet().isEmpty()) {
@@ -92,7 +86,7 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
         return loadBalancer;
     }
 
-    @Transactional(value="transactionManager2")
+    @Transactional(value="adapter_transactionManager")
     public String allocateIpv4VirtualIp(VirtualIp virtualIp, Integer accountId, Cluster cluster) throws OutOfVipsException, EntityNotFoundException {
         Calendar timeConstraintForVipReuse = Calendar.getInstance();
         timeConstraintForVipReuse.add(Calendar.DATE, -Constants.NUM_DAYS_BEFORE_VIP_REUSE);
@@ -114,12 +108,12 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
         }
     }
 
-    @Transactional(value="transactionManager2")
+    @Transactional(value="adapter_transactionManager")
     public String allocateIpv6VirtualIp(VirtualIp vip, Integer accountId, Cluster c) throws EntityNotFoundException {
          return adapterVirtualIpRepository.allocateIpv6Vip(vip, accountId, c);
     }
 
-    @Transactional(value="transactionManager2")
+    @Transactional(value="adapter_transactionManager")
     public void removeAllVipsFromLoadBalancer(LoadBalancer loadBalancer) {
 
         if (!loadBalancer.getLoadBalancerJoinVipSet().isEmpty()) {
@@ -132,7 +126,7 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
         }
     }
 
-    @Transactional(value="transactionManager2")
+    @Transactional(value="adapter_transactionManager")
     public void undoAllVipsFromLoadBalancer(LoadBalancer loadBalancer) {
 
         if (!loadBalancer.getLoadBalancerJoinVipSet().isEmpty()) {
@@ -158,23 +152,8 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
     }
 
 
-    @Transactional(value="transactionManager2")
-    public boolean isVipAllocatedToAnotherLoadBalancer(LoadBalancer lb, VirtualIp virtualIp) {
-        List<LoadBalancerJoinVip> joinRecords = virtualIpRepository.getJoinRecordsForVip(virtualIp);
-
-        for (LoadBalancerJoinVip joinRecord : joinRecords) {
-            if (!joinRecord.getLoadBalancer().getId().equals(lb.getId())) {
-                LOG.debug(String.format("Virtual ip '%d' is used by a load balancer other than load balancer '%d'.", virtualIp.getId(), lb.getId()));
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
     @Override
-    @Transactional(value="transactionManager2")
+    @Transactional(value="adapter_transactionManager")
     public final VirtualIpv4 createVirtualIpCluster(VirtualIpv4 vipCluster) throws PersistenceServiceException {
 
         VirtualIpv4 dbVipCluster = adapterVirtualIpRepository.createVirtualIpv4(vipCluster);
@@ -183,7 +162,7 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
     }
 
     @Override
-    @Transactional(value="transactionManager2")
+    @Transactional(value="adapter_transactionManager")
     public final VirtualIpv4 getVirtualIpCluster(Integer vipId) {
 
         VirtualIpv4 dbVipCluster = adapterVirtualIpRepository.getVirtualIpv4(vipId);

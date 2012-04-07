@@ -18,10 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-@Transactional(value="transactionManager2")
+@Transactional(value="adapter_transactionManager")
 public class HostRepository {
 
     final Log LOG = LogFactory.getLog(HostRepository.class);
+
     @PersistenceContext(unitName = "loadbalancingadapter")
     private EntityManager entityManager;
 

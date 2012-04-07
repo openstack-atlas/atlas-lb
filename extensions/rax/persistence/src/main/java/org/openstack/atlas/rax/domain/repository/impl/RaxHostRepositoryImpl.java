@@ -9,7 +9,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.List;
 
-@Transactional
+@Transactional(value="core_transactionManager")
 @Repository
 public class RaxHostRepositoryImpl implements RaxHostRepository {
 

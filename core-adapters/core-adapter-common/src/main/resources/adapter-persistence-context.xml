@@ -14,7 +14,7 @@
     <context:annotation-config/>
 
 
-    <bean id="entityManagerFactory2" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    <bean id="adapter_entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="persistenceXmlLocation" value="classpath:META-INF/adapter-persistence.xml"/>
         <property name="persistenceUnitName" value="loadbalancingadapter"/>
         <property name="dataSource" ref="loadBalancingAdapterDataSource"/>
@@ -31,8 +31,8 @@
         <property name="validationQuery" value="SELECT 1"/>
     </bean>
         
-    <bean id="transactionManager2" class="org.springframework.orm.jpa.JpaTransactionManager">
-        <property name="entityManagerFactory" ref="entityManagerFactory2"/>
+    <bean id="adapter_transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="adapter_entityManagerFactory"/>
     </bean>
     
     <tx:annotation-driven/>

@@ -18,7 +18,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class SessionPersistenceRepositoryImpl implements SessionPersistenceRepository {
     final Log LOG = LogFactory.getLog(SessionPersistenceRepositoryImpl.class);
     private static final String entityNotFound = "Session persistence not found";
