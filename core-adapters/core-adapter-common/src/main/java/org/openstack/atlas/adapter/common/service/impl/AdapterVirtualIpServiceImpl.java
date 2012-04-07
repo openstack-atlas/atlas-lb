@@ -56,7 +56,7 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
 
     @Override
     @Transactional(value="transactionManager2")
-    public LoadBalancer assignVipsToLoadBalancer(LoadBalancer loadBalancer) throws PersistenceServiceException {
+    public LoadBalancer assignVipsToLoadBalancer(LoadBalancer loadBalancer) throws PersistenceServiceException, EntityNotFoundException {
 
         if (!loadBalancer.getLoadBalancerJoinVipSet().isEmpty()) {
 
@@ -85,6 +85,7 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
                 }
 
                 vip.setAddress(address);
+
             }
         }
 
@@ -92,7 +93,7 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
     }
 
     @Transactional(value="transactionManager2")
-    public String allocateIpv4VirtualIp(VirtualIp virtualIp, Integer accountId, Cluster cluster) throws OutOfVipsException {
+    public String allocateIpv4VirtualIp(VirtualIp virtualIp, Integer accountId, Cluster cluster) throws OutOfVipsException, EntityNotFoundException {
         Calendar timeConstraintForVipReuse = Calendar.getInstance();
         timeConstraintForVipReuse.add(Calendar.DATE, -Constants.NUM_DAYS_BEFORE_VIP_REUSE);
 
@@ -115,23 +116,7 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
 
     @Transactional(value="transactionManager2")
     public String allocateIpv6VirtualIp(VirtualIp vip, Integer accountId, Cluster c) throws EntityNotFoundException {
-
-        Integer vipOctets = adapterVirtualIpRepository.getNextVipOctet(accountId);
-
-
-        VirtualIpv6 ipv6octets = new VirtualIpv6();
-
-        ipv6octets.setAccountId(accountId);
-        ipv6octets.setVipOctets(vipOctets);
-        ipv6octets.setVirtualIpId(vip.getId());
-        ipv6octets = adapterVirtualIpRepository.create(ipv6octets);
-
-        try {
-            return ipv6octets.getDerivedIpString(c);
-        } catch (IPStringConversionException1 e) {
-            LOG.error("Caught an exception while trying to convert IPv6 octets into a string");
-            return null;
-        }
+         return adapterVirtualIpRepository.allocateIpv6Vip(vip, accountId, c);
     }
 
     @Transactional(value="transactionManager2")
@@ -192,7 +177,7 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
     @Transactional(value="transactionManager2")
     public final VirtualIpv4 createVirtualIpCluster(VirtualIpv4 vipCluster) throws PersistenceServiceException {
 
-        VirtualIpv4 dbVipCluster = adapterVirtualIpRepository.createVirtualIpCluster(vipCluster);
+        VirtualIpv4 dbVipCluster = adapterVirtualIpRepository.createVirtualIpv4(vipCluster);
 
         return dbVipCluster;
     }
@@ -201,7 +186,7 @@ public class AdapterVirtualIpServiceImpl implements AdapterVirtualIpService {
     @Transactional(value="transactionManager2")
     public final VirtualIpv4 getVirtualIpCluster(Integer vipId) {
 
-        VirtualIpv4 dbVipCluster = adapterVirtualIpRepository.getVirtualIpCluster(vipId);
+        VirtualIpv4 dbVipCluster = adapterVirtualIpRepository.getVirtualIpv4(vipId);
 
         return dbVipCluster;
     }

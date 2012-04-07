@@ -153,6 +153,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
                 belongsToProperAccount = true;
                 LoadBalancerJoinVip loadBalancerJoinVip = new LoadBalancerJoinVip();
                 loadBalancerJoinVip.setVirtualIp(vipOnAccount);
+                loadBalancerJoinVip.setPort(lbPort);
                 sharedVips.add(loadBalancerJoinVip);
             }
         }

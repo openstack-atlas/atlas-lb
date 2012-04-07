@@ -47,6 +47,8 @@ public class VirtualIpv4 implements Serializable {
     @Column(name = "is_allocated", nullable = false)
     private Boolean isAllocated = false;
 
+    @Column(name = "ref_count", nullable = false)
+    private Integer refCount = 0;
 
 
     public VirtualIpv4()
@@ -113,5 +115,13 @@ public class VirtualIpv4 implements Serializable {
 
     public void setAllocated(Boolean allocated) {
         isAllocated = allocated;
+    }
+
+    public Integer getRefCount() {
+        return refCount;
+    }
+
+    public void setRefCount(Integer refCount) {
+        this.refCount = refCount;
     }
 }

@@ -27,6 +27,9 @@ public class VirtualIpv6 implements Serializable {
     @Column(name = "vip_octets", nullable = false)
     private Integer vipOctets;
 
+    @Column(name = "ref_count", nullable = false)
+    private Integer refCount = 0;
+
     public Integer getVirtualIpId() {
         return virtualIpId;
     }
@@ -50,7 +53,16 @@ public class VirtualIpv6 implements Serializable {
     public void setVipOctets(Integer vipOctets) {
         this.vipOctets = vipOctets;
     }
-    
+
+    public Integer getRefCount() {
+        return refCount;
+    }
+
+    public void setRefCount(Integer refCount) {
+        this.refCount = refCount;
+    }
+
+
     public String getDerivedIpString(Cluster c) throws IPStringConversionException1 {
         String out;
         String clusterCidrString = c.getClusterIpv6Cidr();
