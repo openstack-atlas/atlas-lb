@@ -26,7 +26,7 @@ public class VirtualIpConverter implements CustomConverter {
 
     @Override
     public Object convert(Object existingDestinationFieldValue, Object sourceFieldValue, Class<?> destinationClass, Class<?> sourceClass) {
-        final Integer VIP_ID_DEMARCATION = 9000000;
+
         if (sourceFieldValue == null) {
             return null;
         }
@@ -40,7 +40,16 @@ public class VirtualIpConverter implements CustomConverter {
                     VirtualIp vip = new VirtualIp();
                     vip.setId(loadBalancerJoinVip.getVirtualIp().getId());
                     vip.setAddress(loadBalancerJoinVip.getVirtualIp().getAddress());
-                    vip.setIpVersion(IpVersion.fromValue(loadBalancerJoinVip.getVirtualIp().getIpVersion().name()));
+                    switch (loadBalancerJoinVip.getVirtualIp().getIpVersion()) {
+                        case IPV4:
+                            vip.setIpVersion(IpVersion.IPV4);
+                            break;
+                        case IPV6:
+                            vip.setIpVersion(IpVersion.IPV6);
+                            break;
+                        default:
+                            throw new RuntimeException(String.format("Unsupported vip Ip version '%s' given while mapping.", loadBalancerJoinVip.getVirtualIp().getIpVersion().name()));
+                    }
 
                     switch (loadBalancerJoinVip.getVirtualIp().getVipType()) {
                         case PUBLIC:
@@ -52,7 +61,9 @@ public class VirtualIpConverter implements CustomConverter {
                         default:
                             throw new RuntimeException(String.format("Unsupported vip type '%s' given while mapping.", loadBalancerJoinVip.getVirtualIp().getVipType().name()));
                     }
+
                     vips.add(vip);
+
                 }
              } catch (NullPointerException e) {
                  //Ignore, there is nothing to map
@@ -72,9 +83,7 @@ public class VirtualIpConverter implements CustomConverter {
             if (vips.size() > 0) {
                 VirtualIp vip = vips.get(0);
 
-                if (vip.getId() != null) {
-                    loadBalancerJoinVipSet = buildSharedVip(vip);
-                } else {
+                if (vip.getId() == null) {
 
                     if (vip.getIpVersion() == null) {
                         if (vip.getType() != null && vip.getType().equals(VipType.PRIVATE)) {
@@ -84,9 +93,9 @@ public class VirtualIpConverter implements CustomConverter {
                             vip.setType(VipType.PUBLIC);
                         }
                     }
-
-                    loadBalancerJoinVipSet = buildLoadBalancerJoinVipSet(vip);
                 }
+
+                loadBalancerJoinVipSet = buildLoadBalancerJoinVipSet(vip);
             }
 
             VirtualIpDozerWrapper dozerWrapper = new VirtualIpDozerWrapper();
@@ -159,6 +168,7 @@ public class VirtualIpConverter implements CustomConverter {
 
         switch (vip.getIpVersion()) {
             case IPV4:
+
                 domainVip.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.IPV4);
                 break;
             case IPV6:
@@ -172,17 +182,5 @@ public class VirtualIpConverter implements CustomConverter {
         return loadBalancerJoinVipSet;
     }
 
-    private Set<LoadBalancerJoinVip> buildSharedVip(VirtualIp vip) {
-        LoadBalancerJoinVip loadBalancerJoinVip = new LoadBalancerJoinVip();
-        Set<LoadBalancerJoinVip> loadBalancerJoinVipSet = new HashSet<LoadBalancerJoinVip>();
-
-        org.openstack.atlas.service.domain.entity.VirtualIp domainVip = new org.openstack.atlas.service.domain.entity.VirtualIp();
-        domainVip.setId(vip.getId());
-
-        loadBalancerJoinVip.setVirtualIp(domainVip);
-        loadBalancerJoinVipSet.add(loadBalancerJoinVip);
-
-        return loadBalancerJoinVipSet;
-    }
 
 }

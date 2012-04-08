@@ -8,10 +8,7 @@ import org.openstack.atlas.common.ip.exception.IpTypeMissMatchException;
 import org.openstack.atlas.datamodel.CoreLoadBalancerStatus;
 import org.openstack.atlas.datamodel.CoreNodeStatus;
 import org.openstack.atlas.service.domain.common.NodesHelper;
-import org.openstack.atlas.service.domain.entity.AccountLimitType;
-import org.openstack.atlas.service.domain.entity.LoadBalancer;
-import org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip;
-import org.openstack.atlas.service.domain.entity.Node;
+import org.openstack.atlas.service.domain.entity.*;
 import org.openstack.atlas.service.domain.exception.BadRequestException;
 import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.openstack.atlas.service.domain.exception.ImmutableEntityException;
@@ -203,7 +200,11 @@ public class NodeServiceImpl extends BaseService implements NodeService {
     public boolean areAddressesValidForUse(Set<Node> nodes, LoadBalancer dbLb) {
         for (LoadBalancerJoinVip loadBalancerJoinVip : dbLb.getLoadBalancerJoinVipSet()) {
             for (Node node : nodes) {
-                if (loadBalancerJoinVip.getVirtualIp().getAddress().equals(node.getAddress())) {
+                VirtualIp vip = loadBalancerJoinVip.getVirtualIp();
+                String vip_address = vip.getAddress();
+                String node_address = node.getAddress();
+
+                if (vip_address.equals(node_address)) {
                     return false;
                 }
             }

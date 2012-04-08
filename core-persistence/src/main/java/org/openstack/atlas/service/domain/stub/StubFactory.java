@@ -203,9 +203,11 @@ public class StubFactory {
         VirtualIp virtualIp1 = new VirtualIp();
         virtualIp1.setId(VIP1_ID);
         virtualIp1.setAddress(VIP1_ADDRESS);
+        virtualIp1.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.valueOf(VIP1_VERSION));
         virtualIp1.setVipType(org.openstack.atlas.service.domain.entity.VirtualIpType.valueOf(VIP1_TYPE));
 
-        LoadBalancerJoinVip loadBalancerJoinVip = new LoadBalancerJoinVip(LOAD_BALANCER_PORT, loadBalancer, virtualIp1);
+        LoadBalancerJoinVip loadBalancerJoinVip = new LoadBalancerJoinVip();
+        loadBalancerJoinVip.setVirtualIp(virtualIp1);
         loadBalancer.getLoadBalancerJoinVipSet().add(loadBalancerJoinVip);
 
         loadBalancer.setConnectionThrottle(createHydratedDomainConnectionThrottle());
@@ -222,6 +224,13 @@ public class StubFactory {
 
         loadBalancer.setAccountId(ACCOUNT_ID);
         loadBalancer.setName(LOAD_BALANCER_NAME);
+        LoadBalancerJoinVip lbJoinVip = new LoadBalancerJoinVip();
+        VirtualIp vip = new VirtualIp();
+        vip.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.IPV4);
+        vip.setVipType(VirtualIpType.PRIVATE);
+        vip.setAddress("1.1.1.1");
+        lbJoinVip.setVirtualIp(vip);
+        loadBalancer.getLoadBalancerJoinVipSet().add(lbJoinVip);
 
         Node node1 = new Node();
         node1.setAddress(NODE1_ADDRESS);
@@ -336,9 +345,10 @@ public class StubFactory {
     }
 
     public static LoadBalancerJoinVip createHydratedLoadBalancerJoinVip() {
-        LoadBalancer loadBalancer = createHydratedDomainLoadBalancer();
         VirtualIp virtualIp = createHydratedDomainVirtualIp();
-        return new LoadBalancerJoinVip(LOAD_BALANCER_PORT, loadBalancer, virtualIp);
+        LoadBalancerJoinVip lbJoinVip = new LoadBalancerJoinVip();
+        lbJoinVip.setVirtualIp(virtualIp);
+        return lbJoinVip;
     }
 
     public static VirtualIp createHydratedDomainVirtualIp() {
@@ -346,6 +356,7 @@ public class StubFactory {
         virtualIp.setId(VIP1_ID);
         virtualIp.setAddress(VIP1_ADDRESS);
         virtualIp.setVipType(VirtualIpType.valueOf(VIP1_TYPE));
+        virtualIp.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.valueOf(VIP1_VERSION));
         return virtualIp;
     }
 

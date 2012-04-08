@@ -48,7 +48,7 @@ public class LoadBalancerServiceITest {
         @Test
         public void shouldAllocateVirtualIpsWhenCreateSucceeds() throws PersistenceServiceException {
             LoadBalancer dbLoadBalancer = loadBalancerService.create(loadBalancer);
-            Assert.assertTrue(!dbLoadBalancer.getLoadBalancerJoinVipSet().isEmpty() || !dbLoadBalancer.getLoadBalancerJoinVip6Set().isEmpty());
+            Assert.assertTrue(!dbLoadBalancer.getLoadBalancerJoinVipSet().isEmpty());
         }
 
         @Test
