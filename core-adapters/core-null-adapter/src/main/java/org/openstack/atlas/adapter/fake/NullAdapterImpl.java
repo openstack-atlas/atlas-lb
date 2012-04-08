@@ -29,10 +29,6 @@ public class NullAdapterImpl implements LoadBalancerAdapter {
 
     public static Log LOG = LogFactory.getLog(NullAdapterImpl.class.getName());
 
-
-    @Autowired
-    protected Configuration configuration;
-
     @Autowired
     protected HostService hostService;
 
@@ -43,6 +39,22 @@ public class NullAdapterImpl implements LoadBalancerAdapter {
 
     @Autowired
     protected AdapterVirtualIpService virtualIpService;
+
+
+    protected String logFileLocation;
+
+    protected String adapterConfigFileLocation;
+
+
+    @Autowired
+    public NullAdapterImpl(Configuration configuration) {
+
+        logFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.access_log_file_location);
+        adapterConfigFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.adapter_config_file_location);
+
+        //Read settings from our adapter config file.
+    }
+
 
     private LoadBalancerEndpointConfiguration getConfig(Integer loadBalancerId)  throws AdapterException
     {
@@ -69,7 +81,6 @@ public class NullAdapterImpl implements LoadBalancerAdapter {
             Cluster cluster = host.getCluster();
             Host endpointHost = hostRepository.getEndPointHost(cluster.getId());
             List<String> failoverHosts = hostRepository.getFailoverHostNames(cluster.getId());
-            String logFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.access_log_file_location);
             return new LoadBalancerEndpointConfiguration(endpointHost, cluster.getUsername(), CryptoUtil.decrypt(cluster.getPassword()), host, failoverHosts, logFileLocation);
         } catch(DecryptException except)
         {

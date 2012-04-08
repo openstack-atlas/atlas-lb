@@ -12,6 +12,8 @@
 
     <context:component-scan base-package="org.openstack.atlas.adapter.netscaler"/>
     <context:component-scan base-package="org.openstack.atlas.adapter.common"/>
+    <context:component-scan base-package="org.openstack.atlas.api.config"/>
+
     <context:annotation-config/>
 
 </beans>

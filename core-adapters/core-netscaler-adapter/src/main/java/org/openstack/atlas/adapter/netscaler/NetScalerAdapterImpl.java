@@ -42,9 +42,6 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
 
 
     @Autowired
-    protected Configuration configuration;
-
-    @Autowired
     protected NSAdapterUtils nsAdapterUtils;
 
 
@@ -58,14 +55,21 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
     @Autowired
     protected AdapterVirtualIpService virtualIpService;
 
-    /*
-    public NetScalerAdapterImpl() {
 
-        String logFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.adapter_config_file_location);
+    protected String logFileLocation;
 
-        //Read adapter config file.
+    protected String adapterConfigFileLocation;
+
+
+    @Autowired
+    public NetScalerAdapterImpl(Configuration configuration) {
+
+        logFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.access_log_file_location);
+        adapterConfigFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.adapter_config_file_location);
+
+        //Read settings from our adapter config file.
     }
-    */
+
 
     private LoadBalancerEndpointConfiguration getConfig(Integer loadBalancerId)  throws AdapterException
     {
@@ -92,7 +96,6 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
             Cluster cluster = host.getCluster();
             Host endpointHost = hostRepository.getEndPointHost(cluster.getId());
             List<String> failoverHosts = hostRepository.getFailoverHostNames(cluster.getId());
-            String logFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.access_log_file_location);
             return new LoadBalancerEndpointConfiguration(endpointHost, cluster.getUsername(), CryptoUtil.decrypt(cluster.getPassword()), host, failoverHosts, logFileLocation);
         } catch(DecryptException except)
         {

@@ -28,6 +28,7 @@ public class ReverseProxyLoadBalancerServiceImpl implements ReverseProxyLoadBala
 
     @Autowired
     protected Configuration configuration;
+
     @Autowired
     protected LoadBalancerAdapter loadBalancerAdapter;
     @Autowired
@@ -35,6 +36,12 @@ public class ReverseProxyLoadBalancerServiceImpl implements ReverseProxyLoadBala
 
     @Override
     public void createLoadBalancer(Integer accountId, LoadBalancer lb) throws AdapterException, DecryptException, MalformedURLException, Exception {
+
+        if (configuration != null) {
+            LOG.debug("Configuration is not null");
+        } else {
+            LOG.debug("Configuration is null");
+        }
 
         try {
             loadBalancerAdapter.createLoadBalancer(lb);
