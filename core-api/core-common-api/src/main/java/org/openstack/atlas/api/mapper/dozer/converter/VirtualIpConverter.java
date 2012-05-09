@@ -10,19 +10,23 @@ import org.openstack.atlas.core.api.v1.VirtualIp;
 import org.openstack.atlas.core.api.v1.VirtualIps;
 import org.openstack.atlas.service.domain.entity.*;
 import org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip;
+import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.openstack.atlas.service.domain.exception.NoMappableConstantException;
 import org.openstack.atlas.service.domain.pojo.VirtualIpDozerWrapper;
 import org.openstack.atlas.common.ip.exception.IPStringConversionException1;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+
+
+import java.util.*;
 
 import static org.openstack.atlas.core.api.v1.VipType.PUBLIC;
 import static org.openstack.atlas.core.api.v1.VipType.PRIVATE;
 
+
 public class VirtualIpConverter implements CustomConverter {
     private final Log LOG = LogFactory.getLog(VirtualIpConverter.class);
+
+
 
     @Override
     public Object convert(Object existingDestinationFieldValue, Object sourceFieldValue, Class<?> destinationClass, Class<?> sourceClass) {
@@ -154,33 +158,40 @@ public class VirtualIpConverter implements CustomConverter {
         Set<LoadBalancerJoinVip> loadBalancerJoinVipSet = new HashSet<LoadBalancerJoinVip>();
 
         org.openstack.atlas.service.domain.entity.VirtualIp domainVip = new org.openstack.atlas.service.domain.entity.VirtualIp();
+
+
         domainVip.setId(vip.getId());
         domainVip.setAddress(vip.getAddress());
 
-        switch (vip.getType()) {
-            case PUBLIC:
-                domainVip.setVipType(VirtualIpType.PUBLIC);
-                break;
-            case PRIVATE:
-                domainVip.setVipType(VirtualIpType.PRIVATE);
-                break;
+        if (vip.getType() != null)
+        {
+            switch (vip.getType()) {
+                case PUBLIC:
+                    domainVip.setVipType(VirtualIpType.PUBLIC);
+                    break;
+                case PRIVATE:
+                    domainVip.setVipType(VirtualIpType.PRIVATE);
+                    break;
+            }
         }
 
-        switch (vip.getIpVersion()) {
-            case IPV4:
+        if (vip.getIpVersion() != null)
+        {
+            switch (vip.getIpVersion()) {
+                case IPV4:
 
-                domainVip.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.IPV4);
-                break;
-            case IPV6:
-                domainVip.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.IPV6);
-                break;
+                    domainVip.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.IPV4);
+                    break;
+                case IPV6:
+                    domainVip.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.IPV6);
+                    break;
+            }
         }
+
 
         loadBalancerJoinVip.setVirtualIp(domainVip);
         loadBalancerJoinVipSet.add(loadBalancerJoinVip);
 
         return loadBalancerJoinVipSet;
     }
-
-
 }
