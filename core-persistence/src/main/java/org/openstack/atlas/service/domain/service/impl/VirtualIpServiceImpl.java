@@ -211,7 +211,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
 
     private void reclaimVirtualIp(LoadBalancer lb, VirtualIp virtualIp) {
         if (!isVipAllocatedToAnotherLoadBalancer(lb, virtualIp)) {
-            LOG.debug("Deallocating an IPv4 address");
+            LOG.debug("Deallocating an address");
             virtualIpRepository.removeVirtualIp(virtualIp);
         }
     }
