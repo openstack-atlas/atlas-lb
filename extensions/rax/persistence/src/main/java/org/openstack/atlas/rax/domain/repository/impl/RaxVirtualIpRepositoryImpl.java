@@ -19,8 +19,10 @@ import java.util.List;
 @Transactional(value="core_transactionManager")
 public class RaxVirtualIpRepositoryImpl extends VirtualIpRepositoryImpl implements RaxVirtualIpRepository {
 
+
+
     @Override
-    public Long getNumIpv4VipsForLoadBalancer(LoadBalancer loadBalancer) {
+    public Long getNumVipsForLoadBalancer(LoadBalancer loadBalancer) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
         Root<LoadBalancerJoinVip> lbJoinVipRoot = criteria.from(LoadBalancerJoinVip.class);
@@ -41,4 +43,6 @@ public class RaxVirtualIpRepositoryImpl extends VirtualIpRepositoryImpl implemen
         accountIds = entityManager.createQuery(query).setParameter("vipId", virtualIp.getId()).getResultList();
         return accountIds;
     }
+
+
 }

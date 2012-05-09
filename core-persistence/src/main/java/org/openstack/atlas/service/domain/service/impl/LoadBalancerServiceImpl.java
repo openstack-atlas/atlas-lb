@@ -99,6 +99,7 @@ public class LoadBalancerServiceImpl implements LoadBalancerService {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getByIdAndAccountId(lb.getId(), lb.getAccountId());
         dbLoadBalancer.setStatus(CoreLoadBalancerStatus.DELETED);
         dbLoadBalancer = loadBalancerRepository.update(dbLoadBalancer);
+        virtualIpService.removeAllVipsFromLoadBalancer(dbLoadBalancer);
     }
 
     protected void addDefaultValuesForCreate(final LoadBalancer loadBalancer) throws PersistenceServiceException {

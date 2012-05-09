@@ -55,6 +55,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
                     newJoinVipSetConfig.addAll(getSharedVips(loadBalancerJoinVip.getVirtualIp(), vipsOnAccount, loadBalancer.getPort()));
                 }
             }
+
             loadBalancer.setLoadBalancerJoinVipSet(newJoinVipSetConfig);
         }
 
@@ -209,9 +210,9 @@ public class VirtualIpServiceImpl implements VirtualIpService {
     }
 
 
-    private void reclaimVirtualIp(LoadBalancer lb, VirtualIp virtualIp) {
+    protected void reclaimVirtualIp(LoadBalancer lb, VirtualIp virtualIp) {
         if (!isVipAllocatedToAnotherLoadBalancer(lb, virtualIp)) {
-            LOG.debug("Deallocating an IPv4 address");
+            LOG.debug("Deallocating an address");
             virtualIpRepository.removeVirtualIp(virtualIp);
         }
     }
