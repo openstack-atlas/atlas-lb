@@ -1,4 +1,6 @@
-package org.openstack.atlas.service.domain.entity;
+package org.openstack.atlas.adapter.common.entity;
+
+import org.openstack.atlas.service.domain.entity.VirtualIp;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -7,12 +9,8 @@ import java.util.Set;
 
 @javax.persistence.Entity
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(
-        name = "vendor",
-        discriminatorType = DiscriminatorType.STRING
-)
-@DiscriminatorValue("CORE")
-@Table(name = "cluster")
+
+@Table(name = "adapter_cluster")
 public class Cluster extends org.openstack.atlas.service.domain.entity.Entity implements Serializable {
     private final static long serialVersionUID = 532512316L;
 
@@ -28,22 +26,10 @@ public class Cluster extends org.openstack.atlas.service.domain.entity.Entity im
     @Column(name = "password", nullable = false)
     private String password;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "cluster")
-    private Set<VirtualIp> virtualIps = new HashSet<VirtualIp>();
 
     @Column(name = "cluster_ipv6_cidr", length = 43, nullable = true)
     private String clusterIpv6Cidr;
 
-    public Set<VirtualIp> getVirtualIps() {
-        if (virtualIps == null) {
-            virtualIps = new HashSet<VirtualIp>();
-        }
-        return virtualIps;
-    }
-
-    public void setVirtualIps(Set<VirtualIp> virtualIps) {
-        this.virtualIps = virtualIps;
-    }
 
     public String getName() {
         return this.name;
@@ -92,7 +78,6 @@ public class Cluster extends org.openstack.atlas.service.domain.entity.Entity im
                 ", description='" + description + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
-                ", virtualIps=" + virtualIps +
                 ", clusterIpv6Cidr='" + clusterIpv6Cidr + '\'' +
                 '}';
     }

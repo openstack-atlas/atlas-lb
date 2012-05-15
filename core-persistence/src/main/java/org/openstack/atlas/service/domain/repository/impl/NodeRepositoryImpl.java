@@ -24,7 +24,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class NodeRepositoryImpl implements NodeRepository {
 
     private final Log LOG = LogFactory.getLog(NodeRepositoryImpl.class);

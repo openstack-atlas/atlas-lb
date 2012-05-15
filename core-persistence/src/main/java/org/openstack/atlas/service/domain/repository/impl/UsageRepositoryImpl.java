@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class UsageRepositoryImpl implements UsageRepository {
     final Log LOG = LogFactory.getLog(UsageRepositoryImpl.class);
     @PersistenceContext(unitName = "loadbalancing")

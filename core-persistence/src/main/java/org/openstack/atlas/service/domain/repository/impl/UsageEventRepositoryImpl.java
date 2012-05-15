@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class UsageEventRepositoryImpl implements UsageEventRepository {
     final Log LOG = LogFactory.getLog(UsageEventRepositoryImpl.class);
     @PersistenceContext(unitName = "loadbalancing")

@@ -2,7 +2,7 @@ package org.openstack.atlas.jobs.usage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.comon.config.LoadBalancerEndpointConfiguration;
 import org.openstack.atlas.adapter.UsageAdapter;
 import org.openstack.atlas.common.crypto.exception.DecryptException;
 import org.openstack.atlas.datamodel.CoreLoadBalancerStatus;

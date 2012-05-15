@@ -1,4 +1,5 @@
-package org.openstack.atlas.service.domain.entity;
+package org.openstack.atlas.adapter.common.entity;
+
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -6,12 +7,8 @@ import java.util.List;
 
 @javax.persistence.Entity
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(
-        name = "vendor",
-        discriminatorType = DiscriminatorType.STRING
-)
-@DiscriminatorValue("CORE")
-@Table(name = "host")
+
+@Table(name = "adapter_host")
 public class Host extends org.openstack.atlas.service.domain.entity.Entity implements Serializable {
     private final static long serialVersionUID = 532512316L;
 
@@ -50,9 +47,6 @@ public class Host extends org.openstack.atlas.service.domain.entity.Entity imple
     @JoinColumn(name = "cluster_id", nullable = false)
     private Cluster cluster;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "host_id")
-    private List<LoadBalancer> loadbalancers;
 
 
     public String getName() {

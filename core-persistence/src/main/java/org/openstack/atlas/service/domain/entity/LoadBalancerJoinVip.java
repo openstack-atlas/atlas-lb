@@ -10,7 +10,7 @@ import java.io.Serializable;
         discriminatorType = DiscriminatorType.STRING
 )
 @DiscriminatorValue("CORE")
-@Table(name = "load_balancer_virtual_ipv4")
+@Table(name = "load_balancer_virtual_ip")
 public class LoadBalancerJoinVip implements Serializable {
     private final static long serialVersionUID = 532512316L;
 
@@ -21,7 +21,7 @@ public class LoadBalancerJoinVip implements Serializable {
         @Column(name = "load_balancer_id")
         private Integer loadBalancerId;
 
-        @Column(name = "virtual_ipv4_id")
+        @Column(name = "virtual_ip_id")
         private Integer virtualIpId;
 
         public Id() {
@@ -61,11 +61,11 @@ public class LoadBalancerJoinVip implements Serializable {
     private Integer port;
 
     @ManyToOne
-    @JoinColumn(name = "load_balancer_id", insertable = false, updatable = false)
+    @JoinColumn(name = "load_balancer_id", insertable = false, updatable = false, nullable = true)
     private LoadBalancer loadBalancer;
 
     @ManyToOne
-    @JoinColumn(name = "virtual_ipv4_id", insertable = false, updatable = false)
+    @JoinColumn(name = "virtual_ip_id", insertable = false, updatable = false)
     private VirtualIp virtualIp;
 
     public LoadBalancerJoinVip() {
@@ -103,6 +103,7 @@ public class LoadBalancerJoinVip implements Serializable {
 
     public void setLoadBalancer(LoadBalancer loadBalancer) {
         this.loadBalancer = loadBalancer;
+        this.id.loadBalancerId = loadBalancer.getId();
     }
 
     public VirtualIp getVirtualIp() {
@@ -111,5 +112,6 @@ public class LoadBalancerJoinVip implements Serializable {
 
     public void setVirtualIp(VirtualIp virtualIp) {
         this.virtualIp = virtualIp;
+        this.id.virtualIpId = virtualIp.getId();
     }
 }

@@ -1,4 +1,4 @@
-package org.openstack.atlas.service.domain.entity;
+package org.openstack.atlas.adapter.common.entity;
 
 import java.io.Serializable;
 

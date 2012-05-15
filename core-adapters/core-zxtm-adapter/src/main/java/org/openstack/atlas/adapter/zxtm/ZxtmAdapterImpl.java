@@ -6,19 +6,31 @@ import org.apache.axis.types.UnsignedInt;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openstack.atlas.adapter.LoadBalancerAdapter;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.common.config.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.common.config.PublicApiServiceConfigurationKeys;
+import org.openstack.atlas.adapter.common.entity.Cluster;
+import org.openstack.atlas.adapter.common.entity.Host;
+import org.openstack.atlas.adapter.common.entity.LoadBalancerHost;
+import org.openstack.atlas.adapter.common.repository.HostRepository;
+import org.openstack.atlas.adapter.common.service.AdapterVirtualIpService;
+import org.openstack.atlas.adapter.common.service.HostService;
 import org.openstack.atlas.adapter.exception.AdapterException;
 import org.openstack.atlas.adapter.exception.BadRequestException;
 import org.openstack.atlas.adapter.exception.RollbackException;
 import org.openstack.atlas.adapter.zxtm.helper.*;
 import org.openstack.atlas.adapter.zxtm.service.ZxtmServiceStubs;
+import org.openstack.atlas.common.config.Configuration;
 import org.openstack.atlas.common.converters.StringConverter;
+import org.openstack.atlas.common.crypto.CryptoUtil;
+import org.openstack.atlas.common.crypto.exception.DecryptException;
 import org.openstack.atlas.common.ip.exception.IPStringConversionException1;
 import org.openstack.atlas.datamodel.CoreAlgorithmType;
 import org.openstack.atlas.datamodel.CoreHealthMonitorType;
 import org.openstack.atlas.datamodel.CorePersistenceType;
 import org.openstack.atlas.datamodel.CoreProtocolType;
 import org.openstack.atlas.service.domain.entity.*;
+import org.openstack.atlas.service.domain.exception.PersistenceServiceException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Primary;
 
@@ -39,9 +51,95 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     public static final VirtualServerRule ruleRateLimitNonHttp = new VirtualServerRule(RATE_LIMIT_NON_HTTP, true, VirtualServerRuleRunFlag.run_every);
     public static final VirtualServerRule ruleXForwardedFor = new VirtualServerRule(XFF, true, VirtualServerRuleRunFlag.run_every);
 
-    @Override
-    public void createLoadBalancer(LoadBalancerEndpointConfiguration config, LoadBalancer lb) throws AdapterException {
+
+
+    @Autowired
+    protected HostService hostService;
+
+
+    @Autowired
+    protected HostRepository hostRepository;
+
+
+    @Autowired
+    protected AdapterVirtualIpService virtualIpService;
+
+
+    protected String logFileLocation;
+
+    protected String adapterConfigFileLocation;
+
+
+    @Autowired
+    public ZxtmAdapterImpl(Configuration configuration) {
+
+        logFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.access_log_file_location);
+        adapterConfigFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.adapter_config_file_location);
+
+        //Read settings from our adapter config file.
+    }
+
+
+    private LoadBalancerEndpointConfiguration getConfig(Integer loadBalancerId)  throws AdapterException
+    {
+        LoadBalancerEndpointConfiguration config = getConfigbyLoadBalancerId(loadBalancerId);
+        if (config == null)
+            throw new AdapterException("Adapter error: Cannot fetch information about LB devices");
+
+        return config;
+    }
+
+    private LoadBalancerEndpointConfiguration getConfigbyLoadBalancerId(Integer lbId) {
+
+        if (hostService == null) {
+            LOG.debug("hostService is null !");
+        }
+
+        LoadBalancerHost lbHost = hostService.getLoadBalancerHost(lbId);
+        Host host = lbHost.getHost();
+        return getConfigbyHost(host);
+    }
+
+
+    private LoadBalancerEndpointConfiguration getConfigbyHost(Host host) {
         try {
+            Cluster cluster = host.getCluster();
+            Host endpointHost = hostRepository.getEndPointHost(cluster.getId());
+            List<String> failoverHosts = hostRepository.getFailoverHostNames(cluster.getId());
+            return new LoadBalancerEndpointConfiguration(endpointHost, cluster.getUsername(), CryptoUtil.decrypt(cluster.getPassword()), host, failoverHosts, logFileLocation);
+        } catch(DecryptException except)
+        {
+            LOG.error(String.format("Decryption exception: ", except.getMessage()));
+            return null;
+        }
+    }
+
+    @Override
+    public void createLoadBalancer(LoadBalancer lb) throws AdapterException {
+
+        // Choose a host for this new load Balancer
+        Host host = hostService.getDefaultActiveHost();
+
+        if (host == null)
+            throw new AdapterException("Cannot retrieve default active host from persistence layer");
+
+        String serviceUrl = host.getEndpoint();
+
+        LoadBalancerHost lbHost = new LoadBalancerHost(lb.getId(), host);
+
+        try {
+            LOG.debug("Before calling hostService.createLoadBalancerHost()");
+            hostService.createLoadBalancerHost(lbHost);
+            // Also assign the Virtual IP for this load balancer
+            virtualIpService.assignVipsToLoadBalancer(lb);
+        } catch (PersistenceServiceException e) {
+            throw new AdapterException("Cannot assign Vips to the loadBalancer : " + e.getMessage());
+        }
+
+        LoadBalancerEndpointConfiguration config = getConfig(lb.getId());
+
+        try {
+
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String virtualServerName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lb);
             final String poolName = virtualServerName;
@@ -77,15 +175,15 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
                 setLoadBalancingAlgorithm(serviceStubs, lb.getAccountId(), lb.getId(), algorithm);
 
                 if (lb.getSessionPersistence() != null && lb.getSessionPersistence().getPersistenceType() != null) {
-                    setSessionPersistence(config, lb.getId(), lb.getAccountId(), lb.getSessionPersistence());
+                    setSessionPersistence(lb.getId(), lb.getAccountId(), lb.getSessionPersistence());
                 }
 
                 if (lb.getHealthMonitor() != null) {
-                    updateHealthMonitor(config, lb.getId(), lb.getAccountId(), lb.getHealthMonitor());
+                    updateHealthMonitor(lb.getId(), lb.getAccountId(), lb.getHealthMonitor());
                 }
 
                 if (lb.getConnectionThrottle() != null) {
-                    updateConnectionThrottle(config, lb.getId(), lb.getAccountId(), lb.getConnectionThrottle());
+                    updateConnectionThrottle(lb.getId(), lb.getAccountId(), lb.getConnectionThrottle());
                 }
 
                 if (lb.getProtocol().equals(CoreProtocolType.HTTP)) {
@@ -94,7 +192,7 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
                 }
                 afterLoadBalancerCreate(config, lb);
             } catch (Exception e) {
-                deleteLoadBalancer(config, lb);
+                deleteLoadBalancer(lb);
                 throw new RollbackException(rollBackMessage, e);
             }
 
@@ -119,7 +217,10 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void updateLoadBalancer(LoadBalancerEndpointConfiguration config, LoadBalancer lb) throws AdapterException {
+    public void updateLoadBalancer(LoadBalancer lb) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lb.getId());
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             // Core spec only allows modification of algorithm attribute for now
@@ -130,7 +231,10 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void deleteLoadBalancer(LoadBalancerEndpointConfiguration config, LoadBalancer lb) throws AdapterException {
+    public void deleteLoadBalancer(LoadBalancer lb) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lb.getId());
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String virtualServerName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lb.getId(), lb.getAccountId());
@@ -139,7 +243,7 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
 
             LOG.debug(String.format("Deleting load balancer '%s'...", virtualServerName));
 
-            deleteHealthMonitor(config, lb.getId(), lb.getAccountId());
+            deleteHealthMonitor(lb.getId(), lb.getAccountId());
             deleteVirtualServer(serviceStubs, virtualServerName);
             deleteNodePool(serviceStubs, poolName);
             deleteProtectionCatalog(serviceStubs, poolName);
@@ -154,7 +258,10 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void createNodes(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, Set<Node> nodes) throws AdapterException {
+    public void createNodes(Integer accountId, Integer lbId, Set<Node> nodes) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String poolName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
@@ -206,7 +313,10 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void deleteNodes(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, Set<Node> nodes) throws AdapterException {
+    public void deleteNodes(Integer accountId, Integer lbId, Set<Node> nodes) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String poolName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
@@ -226,7 +336,10 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void updateNode(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, Node node) throws AdapterException {
+    public void updateNode(Integer accountId, Integer lbId, Node node) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String poolName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
@@ -312,7 +425,10 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void updateConnectionThrottle(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, ConnectionThrottle connectionThrottle) throws AdapterException {
+    public void updateConnectionThrottle(Integer accountId, Integer lbId, ConnectionThrottle connectionThrottle) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String virtualServerName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
@@ -353,7 +469,10 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void deleteConnectionThrottle(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId) throws AdapterException {
+    public void deleteConnectionThrottle(Integer accountId, Integer lbId) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             final String poolName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
             final String protectionClassName = poolName;
@@ -374,7 +493,10 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void updateHealthMonitor(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, HealthMonitor healthMonitor) throws AdapterException {
+    public void updateHealthMonitor(Integer accountId, Integer lbId, HealthMonitor healthMonitor) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String poolName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
@@ -413,7 +535,10 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void deleteHealthMonitor(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId) throws AdapterException {
+    public void deleteHealthMonitor(Integer accountId, Integer lbId) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String poolName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
@@ -439,7 +564,10 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void setSessionPersistence(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, SessionPersistence sessionPersistence) throws AdapterException {
+    public void setSessionPersistence(Integer accountId, Integer lbId, SessionPersistence sessionPersistence) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String poolName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
@@ -496,7 +624,10 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void deleteSessionPersistence(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId) throws AdapterException {
+    public void deleteSessionPersistence(Integer accountId, Integer lbId) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String poolName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
@@ -568,26 +699,12 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
             updatedTrafficIpGroups.addAll(Arrays.asList(currentTrafficIpGroups[0]));
         }
 
-        // Add new traffic ip groups for IPv4 vips
+        // Add new traffic ip groups for IPv4 and IPv6 vips
         for (LoadBalancerJoinVip loadBalancerJoinVipToAdd : lb.getLoadBalancerJoinVipSet()) {
             String newTrafficIpGroup = ZxtmNameHelper.generateTrafficIpGroupName(lb, loadBalancerJoinVipToAdd.getVirtualIp());
             newTrafficIpGroups.add(newTrafficIpGroup);
             updatedTrafficIpGroups.add(newTrafficIpGroup);
             createTrafficIpGroup(config, serviceStubs, loadBalancerJoinVipToAdd.getVirtualIp().getAddress(), newTrafficIpGroup);
-        }
-
-        // Add new traffic ip groups for IPv6 vips
-        for (LoadBalancerJoinVip6 loadBalancerJoinVip6ToAdd : lb.getLoadBalancerJoinVip6Set()) {
-            String newTrafficIpGroup = ZxtmNameHelper.generateTrafficIpGroupName(lb, loadBalancerJoinVip6ToAdd.getVirtualIp());
-            newTrafficIpGroups.add(newTrafficIpGroup);
-            updatedTrafficIpGroups.add(newTrafficIpGroup);
-            try {
-                createTrafficIpGroup(config, serviceStubs, loadBalancerJoinVip6ToAdd.getVirtualIp().getDerivedIpString(), newTrafficIpGroup);
-            } catch (IPStringConversionException1 e) {
-                LOG.error("Rolling back newly created traffic ip groups...", e);
-                deleteTrafficIpGroups(serviceStubs, newTrafficIpGroups);
-                throw new RollbackException("Cannot derive name from IPv6 virtual ip.", e);
-            }
         }
 
         try {
@@ -822,7 +939,7 @@ public class ZxtmAdapterImpl implements LoadBalancerAdapter {
         throttle.setMaxRequestRate(0);
         throttle.setRateInterval(0);
 
-        updateConnectionThrottle(config, loadBalancerId, accountId, throttle);
+        updateConnectionThrottle(loadBalancerId, accountId, throttle);
 
         LOG.info(String.format("Successfully zeroed out connection throttle settings for protection class '%s'.", protectionClassName));
     }

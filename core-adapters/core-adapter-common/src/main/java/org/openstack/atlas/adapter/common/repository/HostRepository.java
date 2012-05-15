@@ -1,37 +1,31 @@
-package org.openstack.atlas.service.domain.repository;
+package org.openstack.atlas.adapter.common.repository;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openstack.atlas.service.domain.entity.Host;
-import org.openstack.atlas.service.domain.entity.HostStatus;
+import org.openstack.atlas.adapter.common.entity.Host;
+import org.openstack.atlas.adapter.common.entity.LoadBalancerHost;
+import org.openstack.atlas.adapter.common.entity.HostStatus;
+import org.openstack.atlas.adapter.common.entity.VirtualIpv6;
 import org.openstack.atlas.service.domain.entity.LoadBalancer;
-import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.List;
 
 @Repository
-@Transactional
+@Transactional(value="adapter_transactionManager")
 public class HostRepository {
 
     final Log LOG = LogFactory.getLog(HostRepository.class);
-    @PersistenceContext(unitName = "loadbalancing")
+
+    @PersistenceContext(unitName = "loadbalancingadapter")
     private EntityManager entityManager;
 
-//    public Host getById(Integer id) throws EntityNotFoundException {
-//        Host host = entityManager.find(Host.class, id);
-//        if (host == null) {
-//            String errMsg = String.format("Cannot access host {id=%d}", id);
-//            LOG.warn(errMsg);
-//            throw new EntityNotFoundException(errMsg);
-//        }
-//        return host;
-//    }
 
     public Host getEndPointHost(Integer clusterId) {
         String hqlStr = "from Host h where h.endpointActive = 1 "
@@ -47,13 +41,31 @@ public class HostRepository {
         return results.get(0);
     }
 
-/*    public String getEndPoint(Integer clusterId) {
-        Host host = getEndPointHost(clusterId);
-        if(host==null) {
+    public LoadBalancerHost getLBHost(Integer lbId) {
+        String hqlStr = "from LoadBalancerHost lbHost where lbHost.id.loadBalancerId = :loadBalancerId";
+        Query query = entityManager.createQuery(hqlStr).setParameter("loadBalancerId", lbId).setMaxResults(1);
+        List<LoadBalancerHost> results = query.getResultList();
+        if (results.size() < 1) {
+            LOG.error(String.format("Error no Host found for LoadBalancer id %d.", lbId));
             return null;
         }
-        return host.getEndpoint();
-    }*/
+        return results.get(0);
+    }
+
+    public LoadBalancerHost createLoadBalancerHost(LoadBalancerHost lbHost) throws Exception {
+    
+        entityManager.persist(lbHost);
+
+        LOG.info(String.format("Create/Update a LoadBalancerHost for loadbalancer id %d and host id %d", lbHost.getLoadBalancerId(), lbHost.getHost().getId()));
+
+        return lbHost;
+    }
+    
+    public void removeLoadBalancerHost(LoadBalancerHost lbHost) throws Exception {
+
+        lbHost = getLBHost(lbHost.getLoadBalancerId());
+        entityManager.remove(lbHost);
+    }
 
     public Host update(Host host) {
         LOG.info("Updating Host " + host.getId() + "...");
@@ -78,8 +90,10 @@ public class HostRepository {
         return hosts;
     }
 
+
+
     public long countLoadBalancersInHost(Host host) {
-        String query = "select count(*) from LoadBalancer lb where lb.host.id = :id";
+        String query = "select count(*) from LoadBalancerHost lbHost where lbHost.host.id = :id";
 
         List<Long> lbsInHost = entityManager.createQuery(query).setParameter("id", host.getId()).getResultList();
         long count = lbsInHost.get(0).longValue();
