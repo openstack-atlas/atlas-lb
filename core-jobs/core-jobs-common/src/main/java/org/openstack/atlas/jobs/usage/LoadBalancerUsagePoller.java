@@ -6,10 +6,9 @@ import org.openstack.atlas.adapter.UsageAdapter;
 import org.openstack.atlas.jobs.JobInterface;
 import org.openstack.atlas.jobs.batch.BatchAction;
 import org.openstack.atlas.jobs.batch.BatchExecutor;
-import org.openstack.atlas.service.domain.entity.Host;
 import org.openstack.atlas.service.domain.entity.UsageEventRecord;
 import org.openstack.atlas.service.domain.entity.UsageRecord;
-import org.openstack.atlas.service.domain.repository.HostRepository;
+import org.openstack.atlas.service.domain.repository.LoadBalancerRepository;
 import org.openstack.atlas.service.domain.repository.UsageEventRepository;
 import org.openstack.atlas.service.domain.repository.UsageRepository;
 import org.quartz.JobExecutionContext;
@@ -27,13 +26,17 @@ public class LoadBalancerUsagePoller implements JobInterface {
     private final int BATCH_SIZE = 100;
 
     @Autowired
-    LoadBalancerUsagePollerThread hostThread;
+    LoadBalancerUsagePollerWorker usageWorker;
+
     @Autowired
     UsageAdapter usageAdapter;
-    @Autowired
-    HostRepository hostRepository;
+
     @Autowired
     UsageRepository usageRepository;
+
+    @Autowired
+    LoadBalancerRepository loadBalancerRepository;
+
     @Autowired
     UsageEventRepository usageEventRepository;
 
@@ -104,46 +107,22 @@ public class LoadBalancerUsagePoller implements JobInterface {
         Calendar startTime = Calendar.getInstance();
         LOG.info(String.format("Load balancer usage poller job started at %s (Timezone: %s)", startTime.getTime(), startTime.getTimeZone().getDisplayName()));
 
-        List<Host> hosts;
-        List<LoadBalancerUsagePollerThread> threads = new ArrayList<LoadBalancerUsagePollerThread>();
+        final LoadBalancerUsagePollerWorker worker = createWorker();
 
-        try {
-            hosts = hostRepository.getActiveHosts();
-        } catch (Exception ex) {
-            LOG.error(ex.getCause(), ex);
-            return;
-        }
-
-        for (final Host host : hosts) {
-            final LoadBalancerUsagePollerThread thread = createHostThread(host);
-            threads.add(thread);
-            thread.start();
-        }
-
-        for (LoadBalancerUsagePollerThread thread : threads) {
-            try {
-                thread.join();
-                LOG.debug(String.format("Load balancer usage poller thread '%s' completed.", thread.getName()));
-            } catch (InterruptedException e) {
-                LOG.error(String.format("Load balancer usage poller thread interrupted for thread '%s'", thread.getName()), e);
-                e.printStackTrace();
-            }
-        }
+        worker.execute();
 
         Calendar endTime = Calendar.getInstance();
         Double elapsedMins = ((endTime.getTimeInMillis() - startTime.getTimeInMillis()) / 1000.0) / 60.0;
         LOG.info(String.format("Usage poller job completed at '%s' (Total Time: %f mins)", endTime.getTime(), elapsedMins));
     }
 
-    protected LoadBalancerUsagePollerThread createHostThread(Host host) {
+    protected LoadBalancerUsagePollerWorker createWorker() {
         try {
-            final LoadBalancerUsagePollerThread thread = hostThread.getClass().newInstance();
-            thread.setName(host.getName() + "-poller-thread");
-            thread.setHost(host);
-            thread.setHostRepository(hostRepository);
-            thread.setUsageRepository(usageRepository);
-            thread.setUsageAdapter(usageAdapter);
-            return thread;
+            final LoadBalancerUsagePollerWorker worker = usageWorker.getClass().newInstance();
+            worker.setLoadBalancerRepository(loadBalancerRepository);
+            worker.setUsageRepository(usageRepository);
+            worker.setUsageAdapter(usageAdapter);
+            return worker;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

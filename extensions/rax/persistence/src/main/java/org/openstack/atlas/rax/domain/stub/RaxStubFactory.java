@@ -84,12 +84,15 @@ public class RaxStubFactory extends StubFactory {
         node2.setStatus(NODE2_STATUS);
         loadBalancer.getNodes().add(node2);
 
+
         VirtualIp virtualIp1 = new VirtualIp();
         virtualIp1.setId(VIP1_ID);
         virtualIp1.setAddress(VIP1_ADDRESS);
+        virtualIp1.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.valueOf(VIP1_VERSION));
         virtualIp1.setVipType(org.openstack.atlas.service.domain.entity.VirtualIpType.valueOf(VIP1_TYPE));
 
-        LoadBalancerJoinVip loadBalancerJoinVip = new LoadBalancerJoinVip(LOAD_BALANCER_PORT, loadBalancer, virtualIp1);
+        LoadBalancerJoinVip loadBalancerJoinVip = new LoadBalancerJoinVip();
+        loadBalancerJoinVip.setVirtualIp(virtualIp1);
         loadBalancer.getLoadBalancerJoinVipSet().add(loadBalancerJoinVip);
 
         ConnectionThrottle throttle = new ConnectionThrottle();

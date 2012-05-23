@@ -11,7 +11,6 @@ import org.openstack.atlas.rax.api.validation.context.VirtualIpContext;
 import org.openstack.atlas.rax.domain.operation.RaxOperation;
 import org.openstack.atlas.rax.domain.service.RaxVirtualIpService;
 import org.openstack.atlas.service.domain.entity.LoadBalancer;
-import org.openstack.atlas.service.domain.entity.VirtualIpv6;
 import org.openstack.atlas.service.domain.pojo.MessageDataContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -50,19 +49,20 @@ public class RaxVirtualIpsResource extends VirtualIpsResource {
         }
 
         try {
-            VirtualIpv6 domainVirtualIpv6 = new VirtualIpv6();
+            org.openstack.atlas.service.domain.entity.VirtualIp domainVirtualIpv6 = new org.openstack.atlas.service.domain.entity.VirtualIp();
+            domainVirtualIpv6.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.IPV6);
             domainVirtualIpv6.setAccountId(accountId);
 
             LoadBalancer domainLb = new LoadBalancer();
             domainLb.setId(loadBalancerId);
             domainLb.setAccountId(accountId);
 
-            VirtualIpv6 newlyAddedIpv6Vip = virtualIpService.addIpv6VirtualIpToLoadBalancer(domainVirtualIpv6, domainLb);
+            org.openstack.atlas.service.domain.entity.VirtualIp newlyAddedIpv6Vip = virtualIpService.addIpv6VirtualIpToLoadBalancer(domainVirtualIpv6, domainLb);
 
             MessageDataContainer dataContainer = new MessageDataContainer();
             dataContainer.setAccountId(accountId);
             dataContainer.setLoadBalancerId(loadBalancerId);
-            dataContainer.setVirtualIpv6(newlyAddedIpv6Vip);
+            dataContainer.setVirtualIp(newlyAddedIpv6Vip);
 //            if (requestHeaders != null) dataContainer.setUserName(requestHeaders.getRequestHeader("X-PP-User").get(0));
 
             asyncService.callAsyncLoadBalancingOperation(RaxOperation.RAX_ADD_VIRTUAL_IP, dataContainer);
@@ -71,7 +71,7 @@ public class RaxVirtualIpsResource extends VirtualIpsResource {
             returnVip.setId(newlyAddedIpv6Vip.getId());
             returnVip.setType(VipType.PUBLIC);
             returnVip.setIpVersion(IpVersion.IPV6);
-            returnVip.setAddress(newlyAddedIpv6Vip.getDerivedIpString());
+            returnVip.setAddress(newlyAddedIpv6Vip.getAddress());
 
             return Response.status(Response.Status.ACCEPTED).entity(returnVip).build();
         } catch (Exception e) {
