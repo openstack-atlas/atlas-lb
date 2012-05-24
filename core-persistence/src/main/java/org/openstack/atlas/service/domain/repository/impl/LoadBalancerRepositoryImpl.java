@@ -18,10 +18,7 @@ import javax.persistence.LockModeType;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.math.BigInteger;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Repository
 @Transactional(value="core_transactionManager")
@@ -239,5 +236,26 @@ public class LoadBalancerRepositoryImpl implements LoadBalancerRepository {
         loadBalancer.setStatus(status);
         entityManager.persist(loadBalancer);
         return loadBalancer;
+    }
+
+    /* Returns only attributes needed for performance reasons */
+    public List<LoadBalancer> getLoadBalancersWithStatus(String status) {
+        List<Object> loadBalancerTuples;
+        List<LoadBalancer> loadBalancers = new ArrayList<LoadBalancer>();
+
+        loadBalancerTuples = entityManager.createNativeQuery("SELECT lb.id, lb.account_id, lb.name FROM load_balancer lb where lb.status = :status")
+                .setParameter("status", status)
+                .getResultList();
+
+        for (Object loadBalancerTuple : loadBalancerTuples) {
+            Object[] row = (Object[]) loadBalancerTuple;
+            LoadBalancer lb = new LoadBalancer();
+            lb.setId((Integer) row[0]);
+            lb.setAccountId((Integer) row[1]);
+            lb.setName((String) row[2]);
+            loadBalancers.add(lb);
+        }
+
+        return loadBalancers;
     }
 }

@@ -116,6 +116,7 @@ public class NetScalerAdapterImpl implements LoadBalancerAdapter {
 
         LoadBalancerHost lbHost = new LoadBalancerHost(lb.getId(), host);
 
+
         try {
             LOG.debug("Before calling hostService.createLoadBalancerHost()");
             hostService.createLoadBalancerHost(lbHost);

@@ -124,27 +124,6 @@ public class HostRepository {
         return hostWithMinimumLoadBalancers;
     }
 
-    /* Returns only attributes needed for performance reasons */
-    public List<LoadBalancer> getUsageLoadBalancersWithStatus(Integer hostId, String status) {
-        List<Object> loadBalancerTuples;
-        List<LoadBalancer> loadBalancers = new ArrayList<LoadBalancer>();
-
-        loadBalancerTuples = entityManager.createNativeQuery("SELECT lb.id, lb.account_id, lb.name FROM load_balancer lb where lb.host_id = :hostId and lb.status = :status")
-                .setParameter("hostId", hostId)
-                .setParameter("status", status)
-                .getResultList();
-
-        for (Object loadBalancerTuple : loadBalancerTuples) {
-            Object[] row = (Object[]) loadBalancerTuple;
-            LoadBalancer lb = new LoadBalancer();
-            lb.setId((Integer) row[0]);
-            lb.setAccountId((Integer) row[1]);
-            lb.setName((String) row[2]);
-            loadBalancers.add(lb);
-        }
-
-        return loadBalancers;
-    }
 
     public List<Host> getActiveHosts() {
         List<Host> allHosts = getHosts();
