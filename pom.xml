@@ -18,6 +18,7 @@
         <module>core-jobs</module>
         <module>extensions</module>
         <module>server</module>
+	<module>core-tools</module>
     </modules>
 
     <build>
