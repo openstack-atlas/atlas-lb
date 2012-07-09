@@ -45,7 +45,7 @@ public class SimpleITest extends ITestBase {
     public void updateLoadBalancer() throws Exception {
         try {
             lb_1.setAlgorithm(CoreAlgorithmType.LEAST_CONNECTIONS);
-            stingrayAdapter.updateLoadBalancer(config, lb_1);
+            stingrayAdapter.updateLoadBalancer(lb_1);
 
             final PoolLoadBalancingAlgorithm[] algorithms = getServiceStubs().getPoolBinding().getLoadBalancingAlgorithm(new String[]{poolName(lb_1)});
             Assert.assertEquals(1, algorithms.length);
@@ -83,7 +83,7 @@ public class SimpleITest extends ITestBase {
         lb_1.getNodes().add(node3);
         lb_1.getNodes().add(node4);
 
-        stingrayAdapter.createNodes(config, lb_1.getId(), lb_1.getAccountId(), lb_1.getNodes());
+        stingrayAdapter.createNodes(lb_1.getId(), lb_1.getAccountId(), lb_1.getNodes());
 
         String node1StingrayString = IpHelper.createStingrayIpString(node_1_1.getAddress(), node_1_1.getPort());
         String node2StingrayString = IpHelper.createStingrayIpString(node_1_2.getAddress(), node_1_2.getPort());
@@ -122,7 +122,7 @@ public class SimpleITest extends ITestBase {
         Set<Node> nodesToDelete = new HashSet<Node>();
         nodesToDelete.add(node3);
         nodesToDelete.add(node4);
-        stingrayAdapter.deleteNodes(config, lb_1.getAccountId(), lb_1.getId(), nodesToDelete);
+        stingrayAdapter.deleteNodes(lb_1.getAccountId(), lb_1.getId(), nodesToDelete);
         lb_1.getNodes().remove(node3);
         lb_1.getNodes().remove(node4);
         // Re-add the original nodes
@@ -133,7 +133,7 @@ public class SimpleITest extends ITestBase {
     private void updateNodeConditionsToEnabled() throws Exception {
         for (Node node : lb_1.getNodes()) {
             node.setEnabled(true);
-            stingrayAdapter.updateNode(config, lb_1.getAccountId(), lb_1.getId(), node);
+            stingrayAdapter.updateNode(lb_1.getAccountId(), lb_1.getId(), node);
         }
 
         assertThatAllNodesAreEnabled();
@@ -157,7 +157,7 @@ public class SimpleITest extends ITestBase {
             assertThatAllNodesAreEnabled();
             for (Node node : lb_1.getNodes()) {
                 node.setEnabled(false);
-                stingrayAdapter.updateNode(config, lb_1.getAccountId(), lb_1.getId(), node);
+                stingrayAdapter.updateNode(lb_1.getAccountId(), lb_1.getId(), node);
             }
         } catch (Exception e) {
             if (e instanceof RollbackException) updateNodeConditionsToEnabled();
@@ -169,7 +169,7 @@ public class SimpleITest extends ITestBase {
         node_1_1.setWeight(0);
 
         try {
-            stingrayAdapter.updateNode(config, lb_1.getAccountId(), lb_1.getId(), node_1_1);
+            stingrayAdapter.updateNode(lb_1.getAccountId(), lb_1.getId(), node_1_1);
         } catch (Exception e) {
             if (e instanceof RollbackException) {
                 final String[][] enabledNodes = getServiceStubs().getPoolBinding().getNodes(new String[]{poolName(lb_1)});
@@ -199,8 +199,8 @@ public class SimpleITest extends ITestBase {
         node_1_1.setWeight(50);
         node_1_2.setWeight(100);
 
-        stingrayAdapter.updateNode(config, lb_1.getAccountId(), lb_1.getId(), node_1_1);
-        stingrayAdapter.updateNode(config, lb_1.getAccountId(), lb_1.getId(), node_1_2);
+        stingrayAdapter.updateNode(lb_1.getAccountId(), lb_1.getId(), node_1_1);
+        stingrayAdapter.updateNode(lb_1.getAccountId(), lb_1.getId(), node_1_2);
 
         final String[][] enabledNodes = getServiceStubs().getPoolBinding().getNodes(new String[]{poolName(lb_1)});
         final String[][] disabledNodes = getServiceStubs().getPoolBinding().getDisabledNodes(new String[]{poolName(lb_1)});
@@ -224,7 +224,7 @@ public class SimpleITest extends ITestBase {
     private void removeNode() throws Exception {
         Set<Node> nodesToDelete = new HashSet<Node>();
         nodesToDelete.add(node_1_2);
-        stingrayAdapter.deleteNodes(config, lb_1.getAccountId(), lb_1.getId(), nodesToDelete);
+        stingrayAdapter.deleteNodes(lb_1.getAccountId(), lb_1.getId(), nodesToDelete);
 
         final String[][] enabledNodes = getServiceStubs().getPoolBinding().getNodes(new String[]{poolName(lb_1)});
         Assert.assertEquals(1, enabledNodes.length);
@@ -246,7 +246,7 @@ public class SimpleITest extends ITestBase {
 
     private void updateSessionPersistence() throws Exception {
         SessionPersistence persistence = new SessionPersistence();
-        stingrayAdapter.setSessionPersistence(config, lb_1.getId(), lb_1.getAccountId(), persistence);
+        stingrayAdapter.setSessionPersistence(lb_1.getId(), lb_1.getAccountId(), persistence);
 
         final String[] persistenceNamesForPools = getServiceStubs().getPoolBinding().getPersistence(new String[]{poolName(lb_1)});
         Assert.assertEquals(1, persistenceNamesForPools.length);
@@ -270,7 +270,7 @@ public class SimpleITest extends ITestBase {
         Assert.assertEquals(CorePersistenceType.HTTP_COOKIE, persistenceNamesForPools[0]);
 
         try {
-            stingrayAdapter.deleteSessionPersistence(config, lb_1.getAccountId(), lb_1.getId());
+            stingrayAdapter.deleteSessionPersistence(lb_1.getAccountId(), lb_1.getId());
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -298,7 +298,7 @@ public class SimpleITest extends ITestBase {
         ConnectionThrottle throttle = new ConnectionThrottle();
         throttle.setMaxRequestRate(2000);
         throttle.setRateInterval(60);
-        stingrayAdapter.updateConnectionThrottle(config, lb_1.getId(), lb_1.getAccountId(), throttle);
+        stingrayAdapter.updateConnectionThrottle(lb_1.getId(), lb_1.getAccountId(), throttle);
 
         final UnsignedInt[] maxConnectionRates = getServiceStubs().getProtectionBinding().getMaxConnectionRate(new String[]{protectionClassName(lb_1)});
         Assert.assertEquals(1, maxConnectionRates.length);
@@ -325,7 +325,7 @@ public class SimpleITest extends ITestBase {
         monitor.setDelay(60);
         monitor.setTimeout(90);
 
-        stingrayAdapter.updateHealthMonitor(config, lb_1.getId(), lb_1.getAccountId(), monitor);
+        stingrayAdapter.updateHealthMonitor(lb_1.getId(), lb_1.getAccountId(), monitor);
 
         String monitorName = monitorName(lb_1);
 
@@ -355,7 +355,7 @@ public class SimpleITest extends ITestBase {
     }
 
     private void deleteHttpHealthMonitor() throws Exception {
-        stingrayAdapter.deleteHealthMonitor(config, lb_1.getAccountId(), lb_1.getId());
+        stingrayAdapter.deleteHealthMonitor(lb_1.getAccountId(), lb_1.getId());
 
         String monitorName = monitorName(lb_1);
         String[] allMonitorNames = getServiceStubs().getMonitorBinding().getAllMonitorNames();
@@ -373,7 +373,7 @@ public class SimpleITest extends ITestBase {
         monitor.setDelay(60);
         monitor.setTimeout(90);
 
-        stingrayAdapter.updateHealthMonitor(config, lb_1.getAccountId(), lb_1.getId(), monitor);
+        stingrayAdapter.updateHealthMonitor(lb_1.getAccountId(), lb_1.getId(), monitor);
 
         String monitorName = monitorName(lb_1);
 
@@ -403,7 +403,7 @@ public class SimpleITest extends ITestBase {
     }
 
     private void removeHttpsHealthMonitor() throws Exception {
-        stingrayAdapter.deleteHealthMonitor(config, lb_1.getAccountId(), lb_1.getId());
+        stingrayAdapter.deleteHealthMonitor(lb_1.getAccountId(), lb_1.getId());
 
         String monitorName = monitorName(lb_1);
         String[] allMonitorNames = getServiceStubs().getMonitorBinding().getAllMonitorNames();

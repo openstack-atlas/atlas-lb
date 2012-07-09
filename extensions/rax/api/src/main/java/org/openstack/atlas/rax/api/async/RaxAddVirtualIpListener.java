@@ -10,7 +10,6 @@ import org.openstack.atlas.rax.api.integration.RaxProxyService;
 import org.openstack.atlas.rax.datamodel.RaxUsageEventType;
 import org.openstack.atlas.service.domain.entity.LoadBalancer;
 import org.openstack.atlas.service.domain.entity.VirtualIp;
-import org.openstack.atlas.service.domain.entity.VirtualIpv6;
 import org.openstack.atlas.service.domain.event.entity.EventType;
 import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.openstack.atlas.service.domain.pojo.MessageDataContainer;
@@ -56,9 +55,9 @@ public class RaxAddVirtualIpListener extends BaseListener {
 
         try {
             LOG.debug(String.format("Adding virtual ips to load balancer '%d' in Zeus...", dbLoadBalancer.getId()));
-            Set<VirtualIpv6> newIpv6Vips = new HashSet<VirtualIpv6>();
-            newIpv6Vips.add(dataContainer.getVirtualIpv6());
-            ((RaxProxyService)reverseProxyLoadBalancerService).addVirtualIps(dbLoadBalancer.getAccountId(), dbLoadBalancer.getId(), new HashSet<VirtualIp>(), newIpv6Vips);
+            Set<VirtualIp> newIpv6Vips = new HashSet<VirtualIp>();
+            newIpv6Vips.add(dataContainer.getVirtualIp());
+            ((RaxProxyService)reverseProxyLoadBalancerService).addVirtualIps(dbLoadBalancer.getAccountId(), dbLoadBalancer.getId(), newIpv6Vips);
             LOG.debug("Successfully added virtual ips in Zeus.");
         } catch (Exception e) {
             loadBalancerRepository.changeStatus(dbLoadBalancer, CoreLoadBalancerStatus.ERROR);

@@ -3,13 +3,23 @@ package org.openstack.atlas.adapter.stingray;
 import org.apache.axis.AxisFault;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.common.config.LoadBalancerEndpointConfiguration;
 import org.openstack.atlas.adapter.UsageAdapter;
+import org.openstack.atlas.adapter.common.config.PublicApiServiceConfigurationKeys;
+import org.openstack.atlas.adapter.common.entity.Cluster;
+import org.openstack.atlas.adapter.common.entity.Host;
+import org.openstack.atlas.adapter.common.entity.LoadBalancerHost;
+import org.openstack.atlas.adapter.common.repository.HostRepository;
+import org.openstack.atlas.adapter.common.service.HostService;
 import org.openstack.atlas.adapter.exception.AdapterException;
 import org.openstack.atlas.adapter.exception.BadRequestException;
 import org.openstack.atlas.adapter.stingray.helper.StingrayNameHelper;
 import org.openstack.atlas.adapter.stingray.service.StingrayServiceStubs;
+import org.openstack.atlas.common.config.Configuration;
+import org.openstack.atlas.common.crypto.CryptoUtil;
+import org.openstack.atlas.common.crypto.exception.DecryptException;
 import org.openstack.atlas.service.domain.entity.LoadBalancer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +30,72 @@ import java.util.*;
 public class StingrayUsageAdapterImpl implements UsageAdapter {
     private static Log LOG = LogFactory.getLog(StingrayUsageAdapterImpl.class.getName());
 
+    @Autowired
+    protected HostService hostService;
+
+
+    @Autowired
+    protected HostRepository hostRepository;
+
+    protected String logFileLocation;
+
+    protected String adapterConfigFileLocation;
+
+
+    @Autowired
+    public StingrayUsageAdapterImpl(Configuration configuration) {
+
+        logFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.access_log_file_location);
+        adapterConfigFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.adapter_config_file_location);
+
+        //Read settings from our adapter config file.
+    }
+
+    private LoadBalancerEndpointConfiguration getConfig(Integer loadBalancerId)  throws AdapterException
+    {
+        LoadBalancerEndpointConfiguration config = getConfigbyLoadBalancerId(loadBalancerId);
+        if (config == null)
+            throw new AdapterException("Adapter error: Cannot fetch information about LB devices");
+
+        return config;
+    }
+
+    private LoadBalancerEndpointConfiguration getConfigbyLoadBalancerId(Integer lbId) {
+
+        if (hostService == null) {
+            LOG.debug("hostService is null !");
+        }
+
+        LoadBalancerHost lbHost = hostService.getLoadBalancerHost(lbId);
+        Host host = lbHost.getHost();
+        return getConfigbyHost(host);
+    }
+
+
+    private LoadBalancerEndpointConfiguration getConfigbyHost(Host host) {
+        try {
+            Cluster cluster = host.getCluster();
+            Host endpointHost = hostRepository.getEndPointHost(cluster.getId());
+            List<String> failoverHosts = hostRepository.getFailoverHostNames(cluster.getId());
+            return new LoadBalancerEndpointConfiguration(endpointHost, cluster.getUsername(), CryptoUtil.decrypt(cluster.getPassword()), host, failoverHosts, logFileLocation);
+        } catch(DecryptException except)
+        {
+            LOG.error(String.format("Decryption exception: ", except.getMessage()));
+            return null;
+        }
+    }
+
+
     @Override
-    public Map<Integer, Long> getTransferBytesIn(LoadBalancerEndpointConfiguration config, List<LoadBalancer> lbs) throws AdapterException {
+    public Map<Integer, Long> getTransferBytesIn(List<LoadBalancer> lbs) throws AdapterException {
+
+        if (lbs.size() == 0) {
+            return new HashMap<Integer, Long>();
+        }
+
+        LoadBalancer firstlb = lbs.get(0);
+        LoadBalancerEndpointConfiguration config = getConfig(firstlb.getId());
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
             Map<Integer, Long> bytesInMap = new HashMap<Integer, Long>();
@@ -40,7 +114,15 @@ public class StingrayUsageAdapterImpl implements UsageAdapter {
     }
 
     @Override
-    public Map<Integer, Long> getTransferBytesOut(LoadBalancerEndpointConfiguration config, List<LoadBalancer> lbs) throws AdapterException {
+    public Map<Integer, Long> getTransferBytesOut(List<LoadBalancer> lbs) throws AdapterException {
+
+        if (lbs.size() == 0) {
+            return new HashMap<Integer, Long>();
+        }
+
+        LoadBalancer firstlb = lbs.get(0);
+        LoadBalancerEndpointConfiguration config = getConfig(firstlb.getId());
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
             Map<Integer, Long> bytesOutMap = new HashMap<Integer, Long>();

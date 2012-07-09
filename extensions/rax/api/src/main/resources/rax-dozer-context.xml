@@ -24,7 +24,6 @@
                 <value>dozer-session-persistence-map.xml</value>
                 <value>dozer-usage-map.xml</value>
                 <value>dozer-virtual-ip-map.xml</value>
-                <value>dozer-rax-host.xml</value>
             </list>
         </property>
         <property name="eventListeners">

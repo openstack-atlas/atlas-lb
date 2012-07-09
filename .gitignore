@@ -25,3 +25,7 @@ classes/
 *.log.*
 tags
 
+##other ignores
+.idea/*
+log.build
+log.txt

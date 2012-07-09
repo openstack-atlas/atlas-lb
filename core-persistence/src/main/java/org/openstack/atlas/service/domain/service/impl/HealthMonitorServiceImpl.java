@@ -26,7 +26,7 @@ public class HealthMonitorServiceImpl implements HealthMonitorService {
     protected HealthMonitorRepository healthMonitorRepository;
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class})
     public HealthMonitor update(Integer loadBalancerId, HealthMonitor healthMonitor) throws PersistenceServiceException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getById(loadBalancerId);
         HealthMonitor dbHealthMonitor = dbLoadBalancer.getHealthMonitor();
@@ -43,13 +43,13 @@ public class HealthMonitorServiceImpl implements HealthMonitorService {
     }
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class})
     public void preDelete(Integer loadBalancerId) throws PersistenceServiceException {
         if (healthMonitorRepository.getByLoadBalancerId(loadBalancerId) == null) throw new EntityNotFoundException("Health monitor not found");
     }
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class})
     public void delete(Integer loadBalancerId) throws PersistenceServiceException {
         healthMonitorRepository.delete(healthMonitorRepository.getByLoadBalancerId(loadBalancerId));
     }

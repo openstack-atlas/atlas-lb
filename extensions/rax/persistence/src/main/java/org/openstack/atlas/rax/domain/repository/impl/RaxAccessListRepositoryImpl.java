@@ -19,7 +19,7 @@ import java.util.List;
 
 @Primary
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class RaxAccessListRepositoryImpl implements RaxAccessListRepository {
 
     @PersistenceContext(unitName = "loadbalancing")

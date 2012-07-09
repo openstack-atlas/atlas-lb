@@ -2,7 +2,6 @@ package org.openstack.atlas.jobs.usage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
 import org.openstack.atlas.adapter.UsageAdapter;
 import org.openstack.atlas.adapter.exception.AdapterException;
 import org.openstack.atlas.jobs.batch.BatchAction;
@@ -14,28 +13,26 @@ import java.util.Map;
 public class UsageCollector implements BatchAction<LoadBalancer> {
     private final Log LOG = LogFactory.getLog(UsageCollector.class);
     protected UsageAdapter usageAdapter;
-    protected LoadBalancerEndpointConfiguration config;
     protected Map<Integer, Long> bytesInMap;
     protected Map<Integer, Long> bytesOutMap;
 
-    public UsageCollector(LoadBalancerEndpointConfiguration config, UsageAdapter usageAdapter) {
-        this.config = config;
+    public UsageCollector(UsageAdapter usageAdapter) {
         this.usageAdapter = usageAdapter;
     }
 
     @Override
     public void execute(List<LoadBalancer> loadBalancers) throws Exception {
         try {
-            LOG.info(String.format("Retrieving transfer bytes in from '%s' (%s)...", config.getHost().getName(), config.getHost().getEndpoint()));
-            bytesInMap = usageAdapter.getTransferBytesIn(config, loadBalancers);
+            LOG.info(String.format("Retrieving transfer bytes in..."));
+            bytesInMap = usageAdapter.getTransferBytesIn(loadBalancers);
 
             LOG.debug("Listing transfer bytes in...");
             for (Integer loadBalancerId : bytesInMap.keySet()) {
                 LOG.debug(String.format("LB Id: '%d', Transfer Bytes In: %d", loadBalancerId, bytesInMap.get(loadBalancerId)));
             }
 
-            LOG.info(String.format("Retrieving transfer bytes out from '%s' (%s)...", config.getHost().getName(), config.getHost().getEndpoint()));
-            bytesOutMap = usageAdapter.getTransferBytesOut(config, loadBalancers);
+            LOG.info(String.format("Retrieving transfer bytes out..."));
+            bytesOutMap = usageAdapter.getTransferBytesOut(loadBalancers);
 
             LOG.debug("Listing transfer bytes out...");
             for (Integer loadBalancerId : bytesOutMap.keySet()) {

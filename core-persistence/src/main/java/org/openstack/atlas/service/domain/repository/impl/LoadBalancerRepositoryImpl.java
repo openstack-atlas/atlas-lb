@@ -18,13 +18,10 @@ import javax.persistence.LockModeType;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.math.BigInteger;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class LoadBalancerRepositoryImpl implements LoadBalancerRepository {
 
     final Log LOG = LogFactory.getLog(LoadBalancerRepositoryImpl.class);
@@ -61,55 +58,32 @@ public class LoadBalancerRepositoryImpl implements LoadBalancerRepository {
     @Override
     public LoadBalancer create(LoadBalancer loadBalancer) {
 
+        setLbIdOnChildObjects(loadBalancer);
+
         final Set<LoadBalancerJoinVip> lbJoinVipsToLink = loadBalancer.getLoadBalancerJoinVipSet();
         loadBalancer.setLoadBalancerJoinVipSet(null);
-        final Set<LoadBalancerJoinVip6> lbJoinVip6sToLink = loadBalancer.getLoadBalancerJoinVip6Set();
-        loadBalancer.setLoadBalancerJoinVip6Set(null);
-
-        setLbIdOnChildObjects(loadBalancer);
 
         Calendar current = Calendar.getInstance();
         loadBalancer.setCreated(current);
         loadBalancer.setUpdated(current);
         loadBalancer = entityManager.merge(loadBalancer);
 
+        Set<LoadBalancerJoinVip> newLbJoinVipSet = new HashSet<LoadBalancerJoinVip>();
+
         // Now attach loadbalancer to vips
         for (LoadBalancerJoinVip lbJoinVipToLink : lbJoinVipsToLink) {
-            entityManager.merge(lbJoinVipToLink.getVirtualIp());
-            LoadBalancerJoinVip loadBalancerJoinVip = new LoadBalancerJoinVip(loadBalancer.getPort(), loadBalancer, lbJoinVipToLink.getVirtualIp());
-            entityManager.merge(loadBalancerJoinVip);
+
+            lbJoinVipToLink.setLoadBalancer(loadBalancer);
+            lbJoinVipToLink = entityManager.merge(lbJoinVipToLink);
+            newLbJoinVipSet.add(lbJoinVipToLink);
         }
 
-/*        for(LoadBalancerJoinVip6 lbJoinVipToLink : lbJoinVip6sToLink) {
-            LoadBalancerJoinVip6 jv = new LoadBalancerJoinVip6(loadBalancer.getPort(), loadBalancer, lbJoinVipToLink.getVirtualIp());
-            entityManager.persist(jv);
-        }*/
+        loadBalancer.setLoadBalancerJoinVipSet(newLbJoinVipSet);
 
-        loadBalancer.setLoadBalancerJoinVip6Set(lbJoinVip6sToLink);
-        entityManager.flush();
 
-        Set<LoadBalancerJoinVip6> loadBalancerJoinVip6SetConfig = loadBalancer.getLoadBalancerJoinVip6Set();
-        loadBalancer.setLoadBalancerJoinVip6Set(null);
-        Set<LoadBalancerJoinVip6> newLbVip6Setconfig = new HashSet<LoadBalancerJoinVip6>();
-        loadBalancer.setLoadBalancerJoinVip6Set(newLbVip6Setconfig);
-        for (LoadBalancerJoinVip6 jv6 : loadBalancerJoinVip6SetConfig) {
-            LoadBalancerJoinVip6 jv = new LoadBalancerJoinVip6(loadBalancer.getPort(), loadBalancer, jv6.getVirtualIp());
-            entityManager.persist(jv);
-        }
+
         return loadBalancer;
     }
-
-/*    @Transactional
-    private void joinIpv6OnLoadBalancer(LoadBalancer lb) {
-        Set<LoadBalancerJoinVip6> loadBalancerJoinVip6SetConfig = lb.getLoadBalancerJoinVip6Set();
-        lb.setLoadBalancerJoinVip6Set(null);
-        Set<LoadBalancerJoinVip6> newLbVip6Setconfig = new HashSet<LoadBalancerJoinVip6>();
-        lb.setLoadBalancerJoinVip6Set(newLbVip6Setconfig);
-        for (LoadBalancerJoinVip6 jv6 : loadBalancerJoinVip6SetConfig) {
-            LoadBalancerJoinVip6 jv = new LoadBalancerJoinVip6(lb.getPort(), lb, jv6.getVirtualIp());
-            entityManager.persist(jv);
-        }
-    }*/
 
     protected void setLbIdOnChildObjects(final LoadBalancer loadBalancer) {
         if (loadBalancer.getNodes() != null) {
@@ -262,5 +236,26 @@ public class LoadBalancerRepositoryImpl implements LoadBalancerRepository {
         loadBalancer.setStatus(status);
         entityManager.persist(loadBalancer);
         return loadBalancer;
+    }
+
+    /* Returns only attributes needed for performance reasons */
+    public List<LoadBalancer> getLoadBalancersWithStatus(String status) {
+        List<Object> loadBalancerTuples;
+        List<LoadBalancer> loadBalancers = new ArrayList<LoadBalancer>();
+
+        loadBalancerTuples = entityManager.createNativeQuery("SELECT lb.id, lb.account_id, lb.name FROM load_balancer lb where lb.status = :status")
+                .setParameter("status", status)
+                .getResultList();
+
+        for (Object loadBalancerTuple : loadBalancerTuples) {
+            Object[] row = (Object[]) loadBalancerTuple;
+            LoadBalancer lb = new LoadBalancer();
+            lb.setId((Integer) row[0]);
+            lb.setAccountId((Integer) row[1]);
+            lb.setName((String) row[2]);
+            loadBalancers.add(lb);
+        }
+
+        return loadBalancers;
     }
 }

@@ -31,21 +31,6 @@ public final class EntryHelper {
         return atomSummary.toString();
     }
 
-    public static String createVirtualIpSummary(VirtualIpv6 virtualIp) {
-        String ipv6AsString = null;
-        try {
-            ipv6AsString = virtualIp.getDerivedIpString();
-        } catch (IPStringConversionException1 e) {
-            // Ignore
-        }
-
-        StringBuffer atomSummary = new StringBuffer();
-        atomSummary.append("Virtual ip successfully added with ");
-        if (ipv6AsString != null) atomSummary.append("address: '").append(ipv6AsString).append("', ");
-        atomSummary.append("type: '").append(VirtualIpType.PUBLIC.name()).append("'");
-        return atomSummary.toString();
-    }
-
     public static String createVirtualIpSummary() {
         return "Virtual ip successfully added";
     }

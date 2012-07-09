@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openstack.atlas.service.domain.common.ErrorMessages;
 import org.openstack.atlas.service.domain.entity.*;
+import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.openstack.atlas.service.domain.exception.OutOfVipsException;
 import org.openstack.atlas.service.domain.repository.VirtualIpRepository;
 import org.springframework.stereotype.Repository;
@@ -19,7 +20,7 @@ import javax.persistence.criteria.Root;
 import java.util.*;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class VirtualIpRepositoryImpl implements VirtualIpRepository {
     private final Log LOG = LogFactory.getLog(VirtualIpRepositoryImpl.class);
     @PersistenceContext(unitName = "loadbalancing")
@@ -28,6 +29,18 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
     public void persist(Object obj) {
         entityManager.persist(obj);
     }
+
+
+    @Override
+    public VirtualIp create(VirtualIp vip) {
+          return entityManager.merge(vip);
+    }
+
+    @Override
+    public void update(VirtualIp vip) {
+          entityManager.merge(vip);
+    }
+
 
     @Override
     public List<LoadBalancerJoinVip> getJoinRecordsForVip(VirtualIp virtualIp) {
@@ -57,79 +70,37 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
         return vips;
     }
 
+
+    @Override
+    public VirtualIp getById(Integer id) throws EntityNotFoundException {
+        VirtualIp vip = entityManager.find(VirtualIp.class, id);
+        if (vip == null) {
+            throw new EntityNotFoundException(ErrorMessages.VIP_NOT_FOUND);
+        }
+        return vip;
+    }
+
+
+
     @Override
     public void removeJoinRecord(LoadBalancerJoinVip loadBalancerJoinVip) {
+
+        VirtualIp vip = loadBalancerJoinVip.getVirtualIp();
+        Integer vipId = vip.getId();
+
         loadBalancerJoinVip = entityManager.find(LoadBalancerJoinVip.class, loadBalancerJoinVip.getId());
-        VirtualIp virtualIp = entityManager.find(VirtualIp.class, loadBalancerJoinVip.getVirtualIp().getId());
+        VirtualIp virtualIp = entityManager.find(VirtualIp.class, vipId);
         virtualIp.getLoadBalancerJoinVipSet().remove(loadBalancerJoinVip);
         entityManager.remove(loadBalancerJoinVip);
     }
 
-    @Override
-    public void deallocateVirtualIp(VirtualIp virtualIp) {
-        virtualIp = entityManager.find(VirtualIp.class, virtualIp.getId());
-        virtualIp.setAllocated(false);
-        virtualIp.setLastDeallocation(Calendar.getInstance());
-        entityManager.merge(virtualIp);
-        LOG.info(String.format("Virtual Ip '%d' de-allocated.", virtualIp.getId()));
-    }
 
     @Override
-    public VirtualIp allocateIpv4VipBeforeDate(Cluster cluster, Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException {
-        VirtualIp vipCandidate;
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<VirtualIp> criteria = builder.createQuery(VirtualIp.class);
-        Root<VirtualIp> vipRoot = criteria.from(VirtualIp.class);
-
-        Predicate isNotAllocated = builder.equal(vipRoot.get(VirtualIp_.isAllocated), false);
-        Predicate lastDeallocationIsNull = builder.isNull(vipRoot.get(VirtualIp_.lastDeallocation));
-        Predicate isBeforeLastDeallocation = builder.lessThan(vipRoot.get(VirtualIp_.lastDeallocation), vipReuseTime);
-        Predicate isVipType = builder.equal(vipRoot.get(VirtualIp_.vipType), vipType);
-        Predicate belongsToCluster = builder.equal(vipRoot.get(VirtualIp_.cluster), cluster);
-
-        criteria.select(vipRoot);
-        criteria.where(builder.and(isNotAllocated, isVipType, belongsToCluster, builder.or(lastDeallocationIsNull, isBeforeLastDeallocation)));
-
-        try {
-            vipCandidate = entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).setMaxResults(1).getSingleResult();
-        } catch (Exception e) {
-            LOG.error(e);
-            throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
-        }
-
-        vipCandidate.setAllocated(true);
-        vipCandidate.setLastAllocation(Calendar.getInstance());
-        entityManager.merge(vipCandidate);
-        return vipCandidate;
+    public void removeVirtualIp(VirtualIp vip) {
+        vip = entityManager.find(VirtualIp.class, vip.getId());
+        entityManager.remove(vip);
     }
 
-    @Override
-    public VirtualIp allocateIpv4VipAfterDate(Cluster cluster, Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException {
-        VirtualIp vipCandidate;
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<VirtualIp> criteria = builder.createQuery(VirtualIp.class);
-        Root<VirtualIp> vipRoot = criteria.from(VirtualIp.class);
-
-        Predicate isNotAllocated = builder.equal(vipRoot.get(VirtualIp_.isAllocated), false);
-        Predicate isAfterLastDeallocation = builder.greaterThan(vipRoot.get(VirtualIp_.lastDeallocation), vipReuseTime);
-        Predicate isVipType = builder.equal(vipRoot.get(VirtualIp_.vipType), vipType);
-        Predicate belongsToCluster = builder.equal(vipRoot.get(VirtualIp_.cluster), cluster);
-
-        criteria.select(vipRoot);
-        criteria.where(isNotAllocated, isAfterLastDeallocation, isVipType, belongsToCluster);
-
-        try {
-            vipCandidate = entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).setMaxResults(1).getSingleResult();
-        } catch (Exception e) {
-            LOG.error(e);
-            throw new OutOfVipsException(ErrorMessages.OUT_OF_VIPS);
-        }
-
-        vipCandidate.setAllocated(true);
-        vipCandidate.setLastAllocation(Calendar.getInstance());
-        entityManager.merge(vipCandidate);
-        return vipCandidate;
-    }
 
     @Override
     public Map<Integer, List<LoadBalancer>> getPorts(Integer vid) {
@@ -154,4 +125,25 @@ public class VirtualIpRepositoryImpl implements VirtualIpRepository {
         }
         return map;
     }
+
+    @Override
+    public Account getLockedAccountRecord(Integer accountId) {
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Account> criteria = builder.createQuery(Account.class);
+        Root<Account> accountRoot = criteria.from(Account.class);
+
+        Predicate recordWithId = builder.equal(accountRoot.get(Account_.id), accountId);
+
+        criteria.select(accountRoot);
+        criteria.where(recordWithId);
+        return entityManager.createQuery(criteria).setLockMode(LockModeType.PESSIMISTIC_WRITE).getSingleResult();
+    }
+
+
+
+    @Override
+    public List<Integer> getAccountIdsAlreadyShaHashed() {
+        return entityManager.createQuery("select a.id from Account a").getResultList();
+    }
+
 }

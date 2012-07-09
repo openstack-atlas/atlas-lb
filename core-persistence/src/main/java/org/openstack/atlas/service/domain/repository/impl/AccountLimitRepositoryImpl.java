@@ -20,7 +20,7 @@ import javax.persistence.criteria.Root;
 import java.util.List;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class AccountLimitRepositoryImpl implements AccountLimitRepository {
     final Log LOG = LogFactory.getLog(AccountLimitRepositoryImpl.class);
     private static final String entityNotFound = "Account limit not found";

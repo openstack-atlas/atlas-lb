@@ -18,7 +18,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class HealthMonitorRepositoryImpl implements HealthMonitorRepository {
     final Log LOG = LogFactory.getLog(HealthMonitorRepositoryImpl.class);
     private static final String entityNotFound = "Health monitor not found";

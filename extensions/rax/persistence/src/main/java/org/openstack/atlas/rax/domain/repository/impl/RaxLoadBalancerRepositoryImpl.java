@@ -13,7 +13,7 @@ import javax.persistence.PersistenceContext;
 
 @Primary
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class RaxLoadBalancerRepositoryImpl extends LoadBalancerRepositoryImpl {
 
     @PersistenceContext(unitName = "loadbalancing")
