@@ -62,6 +62,7 @@ public class VirtualIpMappingTest {
             }
         }
 
+
         @Test
         public void shouldMapAllAttributes() {
             Assert.assertEquals(domainLbJoinVip.getVirtualIp().getId(), apiVirtualIp.getId());
@@ -69,10 +70,12 @@ public class VirtualIpMappingTest {
             Assert.assertEquals(domainLbJoinVip.getVirtualIp().getVipType().name(), apiVirtualIp.getType().name());
             Assert.assertEquals(IpVersion.IPV4, apiVirtualIp.getIpVersion());
         }
+
+
     }
 
     public static class WhenMappingAVirtualIpFromDomainIpv6ToApi extends MappingBase {
-        private org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip6 domainLbJoinVip;
+        private org.openstack.atlas.service.domain.entity.LoadBalancerJoinVip domainLbJoinVip;
         private org.openstack.atlas.core.api.v1.VirtualIp apiVirtualIp;
 
         @Before
@@ -94,7 +97,7 @@ public class VirtualIpMappingTest {
         @Test
         public void shouldMapAllAttributes() throws IPStringConversionException1 {
             Assert.assertEquals(domainLbJoinVip.getVirtualIp().getId(), apiVirtualIp.getId());
-            Assert.assertEquals(domainLbJoinVip.getVirtualIp().getDerivedIpString(), apiVirtualIp.getAddress());
+            Assert.assertEquals(domainLbJoinVip.getVirtualIp().getAddress(), apiVirtualIp.getAddress());
             Assert.assertEquals(IpVersion.IPV6, apiVirtualIp.getIpVersion());
             Assert.assertEquals(VipType.PUBLIC, apiVirtualIp.getType());
         }

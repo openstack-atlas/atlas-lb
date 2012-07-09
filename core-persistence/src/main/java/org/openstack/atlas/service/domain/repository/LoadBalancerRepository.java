@@ -33,4 +33,6 @@ public interface LoadBalancerRepository {
     boolean testAndSetStatus(Integer accountId, Integer loadbalancerId, String statusToChangeTo, boolean allowConcurrentModifications) throws EntityNotFoundException, UnprocessableEntityException;
 
     LoadBalancer changeStatus(LoadBalancer loadBalancer, String status) throws EntityNotFoundException;
+
+    List<LoadBalancer> getLoadBalancersWithStatus(String status);
 }

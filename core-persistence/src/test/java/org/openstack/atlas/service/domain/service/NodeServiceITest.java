@@ -4,8 +4,7 @@ import org.junit.*;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.openstack.atlas.datamodel.CoreLoadBalancerStatus;
-import org.openstack.atlas.service.domain.entity.LoadBalancer;
-import org.openstack.atlas.service.domain.entity.Node;
+import org.openstack.atlas.service.domain.entity.*;
 import org.openstack.atlas.service.domain.exception.BadRequestException;
 import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.openstack.atlas.service.domain.exception.PersistenceServiceException;
@@ -40,6 +39,7 @@ public class NodeServiceITest {
             lb.setAccountId(loadBalancer.getAccountId());
             lb.setId(loadBalancer.getId());
             lb.setNodes(nodes);
+
 
             nodeService.createNodes(lb);
 
@@ -188,7 +188,7 @@ public class NodeServiceITest {
         public void shouldThrowExceptionWhenAddressForIPV6InvalidForUse() throws Exception {
             Set<Node> nodes = new HashSet<Node>();
             Node node = new Node();
-            node.setAddress(loadBalancer.getVirtualIpDozerWrapper().getLoadBalancerJoinVip6Set().iterator().next().getVirtualIp().getDerivedIpString());
+            node.setAddress(loadBalancer.getVirtualIpDozerWrapper().getLoadBalancerJoinVipSet().iterator().next().getVirtualIp().getAddress());
             node.setPort(80);
             nodes.add(node);
 
@@ -253,6 +253,11 @@ public class NodeServiceITest {
             lb.setAccountId(loadBalancer.getAccountId());
             lb.setId(loadBalancer.getId());
             lb.setNodes(nodes);
+            LoadBalancerJoinVip lbJoinVip = new LoadBalancerJoinVip();
+            VirtualIp vip = new VirtualIp();
+            vip.setAddress("1.1.1.1");
+            lbJoinVip.setVirtualIp(vip);
+            lb.getLoadBalancerJoinVipSet().add(lbJoinVip);
 
             nodeService.updateNode(lb);
         }

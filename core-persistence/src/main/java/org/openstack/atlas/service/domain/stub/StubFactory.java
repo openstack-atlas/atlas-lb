@@ -203,9 +203,11 @@ public class StubFactory {
         VirtualIp virtualIp1 = new VirtualIp();
         virtualIp1.setId(VIP1_ID);
         virtualIp1.setAddress(VIP1_ADDRESS);
+        virtualIp1.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.valueOf(VIP1_VERSION));
         virtualIp1.setVipType(org.openstack.atlas.service.domain.entity.VirtualIpType.valueOf(VIP1_TYPE));
 
-        LoadBalancerJoinVip loadBalancerJoinVip = new LoadBalancerJoinVip(LOAD_BALANCER_PORT, loadBalancer, virtualIp1);
+        LoadBalancerJoinVip loadBalancerJoinVip = new LoadBalancerJoinVip();
+        loadBalancerJoinVip.setVirtualIp(virtualIp1);
         loadBalancer.getLoadBalancerJoinVipSet().add(loadBalancerJoinVip);
 
         loadBalancer.setConnectionThrottle(createHydratedDomainConnectionThrottle());
@@ -222,6 +224,13 @@ public class StubFactory {
 
         loadBalancer.setAccountId(ACCOUNT_ID);
         loadBalancer.setName(LOAD_BALANCER_NAME);
+        LoadBalancerJoinVip lbJoinVip = new LoadBalancerJoinVip();
+        VirtualIp vip = new VirtualIp();
+        vip.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.IPV4);
+        vip.setVipType(VirtualIpType.PRIVATE);
+        vip.setAddress("1.1.1.1");
+        lbJoinVip.setVirtualIp(vip);
+        loadBalancer.getLoadBalancerJoinVipSet().add(lbJoinVip);
 
         Node node1 = new Node();
         node1.setAddress(NODE1_ADDRESS);
@@ -324,40 +333,30 @@ public class StubFactory {
         return virtualIp;
     }
 
-    public static LoadBalancerJoinVip6 createHydratedDomainVirtualIpv6() {
+    public static LoadBalancerJoinVip createHydratedDomainVirtualIpv6() {
         LoadBalancer loadBalancer = createHydratedDomainLoadBalancer();
-        VirtualIpv6 virtualIpv6 = new VirtualIpv6();
-        virtualIpv6.setAccountId(loadBalancer.getAccountId());
-        virtualIpv6.setVipOctets(1);
-        virtualIpv6.setCluster(createdHydratedCluster());
+        VirtualIp virtualIp = new VirtualIp();
+        virtualIp.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.IPV6);
 
-        return new LoadBalancerJoinVip6(LOAD_BALANCER_PORT, loadBalancer, virtualIpv6);
-    }
+        virtualIp.setVipType(VirtualIpType.PUBLIC);
+        virtualIp.setAccountId(loadBalancer.getAccountId());
 
-    public static Cluster createdHydratedCluster() {
-        Cluster cluster = new Cluster();
-        cluster.setId(1);
-        cluster.setName("test");
-        cluster.setDescription("test");
-        cluster.setClusterIpv6Cidr("fd24:f480:ce44:91bc::/64");
-        cluster.setUsername("username");
-        cluster.setPassword("0d1131d28d76ba0a72f42f819d207c94");
-
-        return cluster;
+        return new LoadBalancerJoinVip(LOAD_BALANCER_PORT, loadBalancer, virtualIp);
     }
 
     public static LoadBalancerJoinVip createHydratedLoadBalancerJoinVip() {
-        LoadBalancer loadBalancer = createHydratedDomainLoadBalancer();
         VirtualIp virtualIp = createHydratedDomainVirtualIp();
-        return new LoadBalancerJoinVip(LOAD_BALANCER_PORT, loadBalancer, virtualIp);
+        LoadBalancerJoinVip lbJoinVip = new LoadBalancerJoinVip();
+        lbJoinVip.setVirtualIp(virtualIp);
+        return lbJoinVip;
     }
 
     public static VirtualIp createHydratedDomainVirtualIp() {
         VirtualIp virtualIp = new VirtualIp();
         virtualIp.setId(VIP1_ID);
         virtualIp.setAddress(VIP1_ADDRESS);
-        virtualIp.setCluster(createdHydratedCluster());
         virtualIp.setVipType(VirtualIpType.valueOf(VIP1_TYPE));
+        virtualIp.setIpVersion(org.openstack.atlas.service.domain.entity.IpVersion.valueOf(VIP1_VERSION));
         return virtualIp;
     }
 

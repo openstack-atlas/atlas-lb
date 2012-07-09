@@ -51,7 +51,7 @@ public class FullConfigITest extends ITestBase {
         lb_1.setConnectionThrottle(limit);
         try {
             removeLoadBalancer();
-            zxtmAdapter.createLoadBalancer(config, lb_1);
+            zxtmAdapter.createLoadBalancer(lb_1);
             // TODO: Verify settings here if you want, but most have been verified in SimpleITest
         } catch (AdapterException e) {
             if (e.getCause() instanceof ObjectDoesNotExist) {

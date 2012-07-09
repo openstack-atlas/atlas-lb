@@ -13,7 +13,7 @@ import javax.persistence.Query;
 import java.util.List;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class BlacklistRepository {
     final Log LOG = LogFactory.getLog(BlacklistRepository.class);
 

@@ -18,7 +18,6 @@ import org.openstack.atlas.service.domain.exception.ImmutableEntityException;
 import org.openstack.atlas.service.domain.exception.UnprocessableEntityException;
 import org.openstack.atlas.service.domain.repository.BlacklistRepository;
 import org.openstack.atlas.service.domain.repository.LoadBalancerRepository;
-import org.openstack.atlas.service.domain.repository.VirtualIpv6Repository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

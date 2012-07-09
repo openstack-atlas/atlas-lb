@@ -14,6 +14,7 @@ import org.openstack.atlas.service.domain.entity.*;
 import org.openstack.atlas.service.domain.stub.StubFactory;
 
 import java.util.List;
+import java.util.Set;
 
 @RunWith(Enclosed.class)
 public class LoadBalancerMappingTest {
@@ -169,7 +170,12 @@ public class LoadBalancerMappingTest {
         @Test
         public void should_map_virtual_ips_across_two_loadbalancers() {
             final List<org.openstack.atlas.core.api.v1.VirtualIp> list = apiLoadBalancer.getVirtualIps();
-            Assert.assertEquals(domainLoadBalancer.getLoadBalancerJoinVipSet().size(), list.size());
+            Set<LoadBalancerJoinVip> lbJoinVipSet = domainLoadBalancer.getLoadBalancerJoinVipSet();
+
+            int lbJoinVipSetSize = lbJoinVipSet.size();
+            int apiVipsSize = list.size();
+
+            Assert.assertEquals(lbJoinVipSetSize, apiVipsSize);
 
             for (org.openstack.atlas.core.api.v1.VirtualIp virtualIp : list) {
                 if (!(virtualIp.getId() == 1 || virtualIp.getId() == 2)) {

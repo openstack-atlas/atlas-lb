@@ -27,7 +27,7 @@ public class ConnectionThrottleServiceImpl implements ConnectionThrottleService 
     protected ConnectionThrottleRepository connectionThrottleRepository;
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class})
     public ConnectionThrottle update(Integer loadBalancerId, ConnectionThrottle connectionThrottle) throws PersistenceServiceException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getById(loadBalancerId);
         ConnectionThrottle dbConnectionThrottle = dbLoadBalancer.getConnectionThrottle();
@@ -46,7 +46,7 @@ public class ConnectionThrottleServiceImpl implements ConnectionThrottleService 
     }
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class})
     public void preDelete(Integer loadBalancerId) throws EntityNotFoundException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getById(loadBalancerId);
         if (dbLoadBalancer.getConnectionThrottle() == null)
@@ -54,7 +54,7 @@ public class ConnectionThrottleServiceImpl implements ConnectionThrottleService 
     }
 
     @Override
-    @Transactional(rollbackFor = {EntityNotFoundException.class})
+    @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class})
     public void delete(Integer loadBalancerId) throws EntityNotFoundException {
         connectionThrottleRepository.delete(connectionThrottleRepository.getByLoadBalancerId(loadBalancerId));
     }

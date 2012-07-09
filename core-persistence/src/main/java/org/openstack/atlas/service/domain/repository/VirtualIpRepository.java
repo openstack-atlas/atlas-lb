@@ -1,6 +1,7 @@
 package org.openstack.atlas.service.domain.repository;
 
 import org.openstack.atlas.service.domain.entity.*;
+import org.openstack.atlas.service.domain.exception.EntityNotFoundException;
 import org.openstack.atlas.service.domain.exception.OutOfVipsException;
 
 import java.util.Calendar;
@@ -11,6 +12,10 @@ public interface VirtualIpRepository {
 
     void persist(Object obj);
 
+    VirtualIp create(VirtualIp vip);
+
+    void update(VirtualIp vip);
+
     List<LoadBalancerJoinVip> getJoinRecordsForVip(VirtualIp virtualIp);
 
     List<VirtualIp> getVipsByAccountId(Integer accountId);
@@ -19,11 +24,14 @@ public interface VirtualIpRepository {
 
     void removeJoinRecord(LoadBalancerJoinVip loadBalancerJoinVip);
 
-    void deallocateVirtualIp(VirtualIp virtualIp);
-
-    VirtualIp allocateIpv4VipBeforeDate(Cluster cluster, Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException;
-
-    VirtualIp allocateIpv4VipAfterDate(Cluster cluster, Calendar vipReuseTime, VirtualIpType vipType) throws OutOfVipsException;
-
+    Account getLockedAccountRecord(Integer accountId);
+    
     Map<Integer, List<LoadBalancer>> getPorts(Integer vid);
+
+    VirtualIp getById(Integer id) throws EntityNotFoundException;
+
+    void removeVirtualIp(VirtualIp vip);
+
+    List<Integer> getAccountIdsAlreadyShaHashed();
+
 }

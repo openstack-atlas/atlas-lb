@@ -7,12 +7,16 @@
        http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd
-       http://www.springframework.org/schema/context
-       http://www.springframework.org/schema/context/spring-context.xsd
-       http://www.springframework.org/schema/tx 
+       http://www.springframework.org/schema/tx
        http://www.springframework.org/schema/tx/spring-tx-2.5.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd">
 
     <context:component-scan base-package="org.openstack.atlas.adapter.fake"/>
+    <context:component-scan base-package="org.openstack.atlas.adapter.common"/>
+    <context:component-scan base-package="org.openstack.atlas.common.config"/>
+    <context:component-scan base-package="org.openstack.atlas.api.config"/>
+
     <context:annotation-config/>
 
+
 </beans>
+

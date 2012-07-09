@@ -26,7 +26,7 @@ import static org.openstack.atlas.common.converters.DateTimeConverters.isoTocal;
 import static org.openstack.atlas.common.converters.PrimitiveConverters.integerList2cdString;
 
 @Repository
-@Transactional
+@Transactional(value="core_transactionManager")
 public class AlertRepository {
 
     final Log LOG = LogFactory.getLog(AlertRepository.class);

@@ -5,21 +5,27 @@ import org.apache.axis.AxisFault;
 import org.apache.axis.types.UnsignedInt;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.common.config.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.common.entity.Cluster;
+import org.openstack.atlas.adapter.common.entity.Host;
+import org.openstack.atlas.adapter.common.entity.LoadBalancerHost;
 import org.openstack.atlas.adapter.exception.AdapterException;
 import org.openstack.atlas.adapter.exception.BadRequestException;
 import org.openstack.atlas.adapter.exception.RollbackException;
 import org.openstack.atlas.adapter.zxtm.ZxtmAdapterImpl;
 import org.openstack.atlas.adapter.zxtm.helper.ZxtmNameHelper;
 import org.openstack.atlas.adapter.zxtm.service.ZxtmServiceStubs;
+import org.openstack.atlas.common.config.Configuration;
+import org.openstack.atlas.common.crypto.CryptoUtil;
+import org.openstack.atlas.common.crypto.exception.DecryptException;
 import org.openstack.atlas.datamodel.CoreHealthMonitorType;
 import org.openstack.atlas.datamodel.CoreProtocolType;
 import org.openstack.atlas.rax.domain.common.RaxConstants;
 import org.openstack.atlas.rax.domain.entity.RaxAccessList;
 import org.openstack.atlas.rax.domain.entity.RaxAccessListType;
 import org.openstack.atlas.rax.domain.entity.RaxHealthMonitor;
-import org.openstack.atlas.service.domain.common.Constants;
 import org.openstack.atlas.service.domain.entity.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -32,35 +38,75 @@ public class RaxZxtmAdapterImpl extends ZxtmAdapterImpl implements RaxZxtmAdapte
 
     private static Log LOG = LogFactory.getLog(RaxZxtmAdapterImpl.class.getName());
 
-    @Override
-    protected void afterLoadBalancerCreate(LoadBalancerEndpointConfiguration config, LoadBalancer lb) throws AdapterException {
+
+    @Autowired
+    public RaxZxtmAdapterImpl(Configuration configuration) {
+        super(configuration);
+
+        //Read settings from our adapter config file.
+    }
+
+    protected void afterLoadBalancerCreate(LoadBalancer lb) throws AdapterException {
+
         if (lb.getProtocol().equals(CoreProtocolType.HTTP)) {
-            setDefaultErrorPage(config, lb.getId(), lb.getAccountId());
+            setDefaultErrorPage(lb.getId(), lb.getAccountId());
         }
     }
 
-    @Override
-    protected void afterLoadBalancerDelete(LoadBalancerEndpointConfiguration config, LoadBalancer lb) throws AdapterException {
+
+    protected void afterLoadBalancerDelete(LoadBalancer lb) throws AdapterException {
         if (lb.getProtocol().equals(CoreProtocolType.HTTP)) {
-            deleteErrorPage(config, lb.getId(), lb.getAccountId());
+            deleteErrorPage(lb.getId(), lb.getAccountId());
         }
     }
 
+    private LoadBalancerEndpointConfiguration getConfig(Integer loadBalancerId)  throws AdapterException
+    {
+        LoadBalancerEndpointConfiguration config = getConfigbyLoadBalancerId(loadBalancerId);
+        if (config == null)
+            throw new AdapterException("Adapter error: Cannot fetch information about LB devices");
+
+        return config;
+    }
+
+    private LoadBalancerEndpointConfiguration getConfigbyLoadBalancerId(Integer lbId) {
+
+        if (hostService == null) {
+            LOG.debug("hostService is null !");
+        }
+
+        LoadBalancerHost lbHost = hostService.getLoadBalancerHost(lbId);
+        Host host = lbHost.getHost();
+        return getConfigbyHost(host);
+    }
+
+    private LoadBalancerEndpointConfiguration getConfigbyHost(Host host) {
+        try {
+            Cluster cluster = host.getCluster();
+            Host endpointHost = hostRepository.getEndPointHost(cluster.getId());
+            List<String> failoverHosts = hostRepository.getFailoverHostNames(cluster.getId());
+            return new LoadBalancerEndpointConfiguration(endpointHost, cluster.getUsername(), CryptoUtil.decrypt(cluster.getPassword()), host, failoverHosts, logFileLocation);
+        } catch(DecryptException except)
+        {
+            LOG.error(String.format("Decryption exception: ", except.getMessage()));
+            return null;
+        }
+    }
+
+
     @Override
-    public void addVirtualIps(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, Set<VirtualIp> ipv4Vips, Set<VirtualIpv6> ipv6Vips) throws AdapterException {
+    public void addVirtualIps(Integer accountId, Integer lbId, Set<VirtualIp> vips) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             LoadBalancer loadBalancer = new LoadBalancer();
             loadBalancer.setAccountId(accountId);
             loadBalancer.setId(lbId);
 
-            for (VirtualIp ipv4Vip : ipv4Vips) {
-                LoadBalancerJoinVip joinVip = new LoadBalancerJoinVip(null, loadBalancer, ipv4Vip);
+            for (VirtualIp vip : vips) {
+                LoadBalancerJoinVip joinVip = new LoadBalancerJoinVip(null, loadBalancer, vip);
                 loadBalancer.getLoadBalancerJoinVipSet().add(joinVip);
-            }
-
-            for (VirtualIpv6 ipv6Vip : ipv6Vips) {
-                LoadBalancerJoinVip6 joinVip6 = new LoadBalancerJoinVip6(null, loadBalancer, ipv6Vip);
-                loadBalancer.getLoadBalancerJoinVip6Set().add(joinVip6);
             }
 
             addVirtualIps(config, loadBalancer);
@@ -70,7 +116,10 @@ public class RaxZxtmAdapterImpl extends ZxtmAdapterImpl implements RaxZxtmAdapte
     }
 
     @Override
-    public void deleteVirtualIps(LoadBalancerEndpointConfiguration config, LoadBalancer lb, List<Integer> vipIdsToDelete) throws AdapterException {
+    public void deleteVirtualIps(LoadBalancer lb, List<Integer> vipIdsToDelete) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lb.getId());
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String virtualServerName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lb.getId(), lb.getAccountId());
@@ -133,8 +182,11 @@ public class RaxZxtmAdapterImpl extends ZxtmAdapterImpl implements RaxZxtmAdapte
         }
     }
 
-    @Override
-    public void updateAccessList(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, Collection<RaxAccessList> accessListItems) throws AdapterException {
+
+    public void updateAccessList(Integer accountId, Integer lbId, Collection<RaxAccessList> accessListItems) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String protectionClassName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
@@ -146,7 +198,7 @@ public class RaxZxtmAdapterImpl extends ZxtmAdapterImpl implements RaxZxtmAdapte
             }
             LOG.info("Removing the old access list...");
             //remove the current access list...
-            deleteAccessList(config, lbId, accountId);
+            deleteAccessList(lbId, accountId);
 
             LOG.debug("adding the new access list...");
             //add the new access list...
@@ -160,9 +212,12 @@ public class RaxZxtmAdapterImpl extends ZxtmAdapterImpl implements RaxZxtmAdapte
 
     }
 
-    @Override
-    public void deleteAccessList(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId) throws AdapterException {
+
+    public void deleteAccessList(Integer accountId, Integer lbId) throws AdapterException {
         String poolName = "";
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             poolName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
@@ -182,8 +237,11 @@ public class RaxZxtmAdapterImpl extends ZxtmAdapterImpl implements RaxZxtmAdapte
         }
     }
 
-    @Override
-    public void updateConnectionLogging(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, boolean isConnectionLogging, String protocol) throws AdapterException {
+
+    public void updateConnectionLogging(Integer accountId, Integer lbId, boolean isConnectionLogging, String protocol) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String virtualServerName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
@@ -218,8 +276,18 @@ public class RaxZxtmAdapterImpl extends ZxtmAdapterImpl implements RaxZxtmAdapte
         }
     }
 
-    @Override
-    public void uploadDefaultErrorPage(LoadBalancerEndpointConfiguration config, String content) throws AdapterException {
+
+    public void uploadDefaultErrorPage(String content) throws AdapterException {
+
+
+        Host host = hostService.getDefaultActiveHost();
+
+        if (host == null)
+            throw new AdapterException("Cannot retrieve default active host from persistence layer");
+
+
+        LoadBalancerEndpointConfiguration config = getConfigbyHost(host);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             LOG.debug("Attempting to upload the default error file...");
@@ -233,8 +301,17 @@ public class RaxZxtmAdapterImpl extends ZxtmAdapterImpl implements RaxZxtmAdapte
         }
     }
 
-    @Override
-    public void setDefaultErrorPage(LoadBalancerEndpointConfiguration config, Integer loadBalancerId, Integer accountId) throws AdapterException {
+
+    public void setDefaultErrorPage(Integer loadBalancerId, Integer accountId) throws AdapterException {
+
+        Host host = hostService.getDefaultActiveHost();
+
+        if (host == null)
+            throw new AdapterException("Cannot retrieve default active host from persistence layer");
+
+
+        LoadBalancerEndpointConfiguration config = getConfigbyHost(host);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String virtualServerName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(loadBalancerId, accountId);
@@ -248,8 +325,11 @@ public class RaxZxtmAdapterImpl extends ZxtmAdapterImpl implements RaxZxtmAdapte
     }
 
 
-    @Override
-    public void setErrorPage(LoadBalancerEndpointConfiguration config, Integer loadBalancerId, Integer accountId, String content) throws AdapterException {
+
+    public void setErrorPage(Integer loadBalancerId, Integer accountId, String content) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(loadBalancerId);
+
         try {
             String[] vsNames = new String[1];
             String[] errorFiles = new String[1];
@@ -289,9 +369,12 @@ public class RaxZxtmAdapterImpl extends ZxtmAdapterImpl implements RaxZxtmAdapte
         return msg;
     }
 
-    @Override
-    public void deleteErrorPage(LoadBalancerEndpointConfiguration config, Integer loadBalancerId, Integer accountId) throws AdapterException {
+
+    public void deleteErrorPage(Integer loadBalancerId, Integer accountId) throws AdapterException {
         String fileToDelete = "";
+
+        LoadBalancerEndpointConfiguration config = getConfig(loadBalancerId);
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             fileToDelete = getErrorFileName(loadBalancerId, accountId);
@@ -305,8 +388,13 @@ public class RaxZxtmAdapterImpl extends ZxtmAdapterImpl implements RaxZxtmAdapte
         }
     }
 
-    @Override
-    public void updateHealthMonitor(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, HealthMonitor healthMonitor) throws AdapterException {
+
+    public void updateHealthMonitor(Integer accountId, Integer lbId, HealthMonitor healthMonitor) throws AdapterException {
+
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
+
         try {
             ZxtmServiceStubs serviceStubs = getServiceStubs(config);
             final String poolName = ZxtmNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);

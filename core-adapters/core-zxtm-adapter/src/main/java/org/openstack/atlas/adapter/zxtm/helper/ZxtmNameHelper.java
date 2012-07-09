@@ -3,7 +3,6 @@ package org.openstack.atlas.adapter.zxtm.helper;
 import org.openstack.atlas.adapter.exception.BadRequestException;
 import org.openstack.atlas.service.domain.entity.LoadBalancer;
 import org.openstack.atlas.service.domain.entity.VirtualIp;
-import org.openstack.atlas.service.domain.entity.VirtualIpv6;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -51,11 +50,7 @@ public final class ZxtmNameHelper {
         return lb.getAccountId() + "_" + vip.getId();
     }
 
-    public static String generateTrafficIpGroupName(LoadBalancer lb, VirtualIpv6 vip) throws BadRequestException {
-        if (vip.getId() == null)
-            throw new BadRequestException("Missing id for virtual ip.");
-        return lb.getAccountId() + "_" + vip.getId();
-    }
+
 
     public static Integer stripAccountIdFromName(String name) throws NumberFormatException, ArrayIndexOutOfBoundsException {
         return Integer.valueOf(name.split("_")[0]);

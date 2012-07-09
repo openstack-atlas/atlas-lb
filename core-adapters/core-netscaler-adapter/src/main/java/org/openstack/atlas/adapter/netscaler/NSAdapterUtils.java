@@ -2,7 +2,6 @@ package org.openstack.atlas.adapter.netscaler;
 
 import java.util.*;
 import java.io.*;
-import java.net.*;
 
 
 import javax.xml.bind.JAXBContext;
@@ -14,16 +13,27 @@ import javax.xml.transform.stream.StreamSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.openstack.atlas.adapter.common.config.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.common.service.AdapterVirtualIpService;
 import org.openstack.atlas.adapter.exception.*;
 import org.openstack.atlas.service.domain.entity.*;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.service.domain.entity.ConnectionThrottle;
+import org.openstack.atlas.service.domain.entity.HealthMonitor;
+import org.openstack.atlas.service.domain.entity.LoadBalancer;
+import org.openstack.atlas.service.domain.entity.Node;
+import org.openstack.atlas.service.domain.entity.SessionPersistence;
+import org.openstack.atlas.service.domain.entity.VirtualIp;
 import org.springframework.stereotype.Service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class NSAdapterUtils
 {
     public static Log LOG = LogFactory.getLog(NSAdapterUtils.class.getName());
+
+    @Autowired 
+    private AdapterVirtualIpService adapterVirtualIpService;
 
     public String getLBURLStr(String serviceUrl, Integer accountId, String resourceType)
     {
@@ -101,7 +111,7 @@ public class NSAdapterUtils
 	 	
         try 
         {
-			JAXBContext ctxt = JAXBContext.newInstance("com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1");
+			JAXBContext ctxt = JAXBContext.newInstance("com.citrix.cloud.org.openstack.atlas.adapter.temp.atlas.docs.loadbalancers.api.v1");
 			Unmarshaller  u = ctxt.createUnmarshaller() ; 
 			return u.unmarshal( new StreamSource( new StringReader( response) ) );
 		} 
@@ -140,9 +150,28 @@ public class NSAdapterUtils
     	return requestBody;
     }
 
+    public void populateNSLoadBalancerForUpdate(LoadBalancer lb, com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB)
+           throws BadRequestException
+    {
+        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIp nsVIP = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIp();
+        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.HealthMonitor nsMon = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.HealthMonitor();
+        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.SessionPersistence nsPersistence = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.SessionPersistence();
+        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.ConnectionThrottle nsThrottle = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.ConnectionThrottle();
 
 
-    public void populateNSLoadBalancer(LoadBalancer lb, com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB)
+    	String name = lb.getName();
+    	String alg = lb.getAlgorithm().toString();
+
+    	nsLB.setName(name);
+        nsLB.setAlgorithm(alg);
+
+        //Set all the lists to null so they won't get generated in the request payload.
+        nsLB.setVirtualIp(null);
+        nsLB.setNodes(null);
+        nsLB.setCertificates(null);
+    }
+
+    public void populateNSLoadBalancerForCreate(LoadBalancer lb, com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.LoadBalancer nsLB)
            throws BadRequestException
     {
         com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIp nsVIP = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIp();
@@ -157,20 +186,15 @@ public class NSAdapterUtils
     	String prot = lb.getProtocol().toString();
     	Integer port = lb.getPort();
         Set<LoadBalancerJoinVip> vips = lb.getLoadBalancerJoinVipSet();
-        Set<LoadBalancerJoinVip6> vips6 = lb.getLoadBalancerJoinVip6Set();        
     	Set<Node> nodes = lb.getNodes();
     	HealthMonitor monitor = lb.getHealthMonitor();
 		SessionPersistence sp = lb.getSessionPersistence();
 		ConnectionThrottle throttle = lb.getConnectionThrottle();
 
         // If we find an IPv6 address we use that one. If not we use an IPv4 address
-        
-        populateNSVIP6(vips6, nsVIP);
-        
-        if (nsVIP.getId() <= 0)
-        {
-            populateNSVIP(vips, nsVIP);
-        }
+
+        populateNSVIP(vips, nsVIP);
+
         
         if (nsVIP.getId() <= 0)
         {
@@ -236,95 +260,18 @@ public class NSAdapterUtils
         {
             VirtualIp vip = lbjoinVip.getVirtualIp();
 
-            Integer vipId = vip.getId(); 
-            String vipAddress = vip.getAddress();
-            IpVersion vipVersion = IpVersion.IPV4;
-            VirtualIpType vipType = vip.getVipType();
+            nsVIP.setId(vip.getId());
 
-            nsVIP.setId(vipId);
+    	    nsVIP.setAddress(vip.getAddress());
 
-            if (vipAddress == null)
-            {
-                throw new BadRequestException("Missing attributes [ipAddress] from virtualIp....", new Error());
-            }
+            nsVIP.setIpVersion(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.IpVersion.fromValue(vip.getIpVersion().name()));
 
-    	    nsVIP.setAddress(vipAddress);
-
-            nsVIP.setIpVersion(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.IpVersion.IPV4);
-
-            if (vipType != null)
-            {   
-                        switch(vipType)
-                        { 
-                            case PUBLIC:  
-		                        nsVIP.setType(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIpType.PUBLIC);
-                                break;
-
-                            case PRIVATE:  
-		                        nsVIP.setType(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIpType.PRIVATE);
-                                break;
-
-                            default:
-                                throw new BadRequestException("Value for attribute [type] of virtualIp not valid....", new Error());                      
-                        }
-            }
-             
+            nsVIP.setType(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIpType.fromValue(vip.getVipType().name()));
 
             break; // process only the first Virtual IP of a loadbalancer
         }
     }
 
-
-    public void populateNSVIP6(Set<LoadBalancerJoinVip6> vips6, com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIp nsVIP)
-           throws BadRequestException
-                 
-    {
-        LOG.debug(String.format("Inside populateNSVIP6"));
-
-        if (vips6 == null || vips6.size() <= 0)
-        {
-            LOG.debug(String.format("Inside populateNSVIP6 0.1"));
-            nsVIP.setId(-1);
-            return;
-        }   
-
-        LOG.debug(String.format("Inside populateNSVIP6 2"));
-
-        if (vips6.size() > 1)
-        {
-            throw new BadRequestException("Core adapters can support only one VIP per loadbalancer", new Error());
-        }
-            
-
-        for (LoadBalancerJoinVip6 lbjoinVip : vips6)
-        {
-            LOG.debug(String.format("populatinv vip6 2.1"));
-            VirtualIpv6 vip = lbjoinVip.getVirtualIp();
-
-            Integer vipId = vip.getId(); 
-            IpVersion vipVersion = IpVersion.IPV6;
-            nsVIP.setId(vipId);
-
-
-
-		    nsVIP.setIpVersion(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.IpVersion.IPV6);
-		    nsVIP.setType(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.VirtualIpType.PUBLIC);
-
-            try {
-                String vipAddress = vip.getDerivedIpString();
-                if (vipAddress == null)
-                {
-                    throw new BadRequestException("Missing attributes [ipAddress] from virtualIp....", new Error());
-                }
-
-                nsVIP.setAddress(vipAddress);
-            } catch (Exception e) {
-                throw new BadRequestException("Cannot convert IPv6 address into a string....", new Error());            
-            }        
-            break; // process only the first Virtual IP of a loadbalancer.
-        }
-    }
-    
     
     public com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node translateNode(Node node, boolean forUpdate)
            throws BadRequestException
@@ -428,6 +375,8 @@ public class NSAdapterUtils
 	{
         String resourceType = "loadbalancers";
         Integer resourceId = lbId;
+
+
 		String serviceUrl = config.getHost().getEndpoint();
         String resourceUrl = getLBURLStr(serviceUrl, accountId, resourceType, resourceId);
 

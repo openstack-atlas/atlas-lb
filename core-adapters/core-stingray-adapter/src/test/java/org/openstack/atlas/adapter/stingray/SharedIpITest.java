@@ -33,7 +33,7 @@ public class SharedIpITest extends ITestBase {
 
     private static void createLoadBalancerWithSharedIp() {
         try {
-            stingrayAdapter.createLoadBalancer(config, lb_2);
+            stingrayAdapter.createLoadBalancer(lb_2);
 
             final VirtualServerBasicInfo[] virtualServerBasicInfos = getServiceStubs().getVirtualServerBinding().getBasicInfo(new String[]{loadBalancerName(lb_2)});
             Assert.assertEquals(1, virtualServerBasicInfos.length);
@@ -97,7 +97,7 @@ public class SharedIpITest extends ITestBase {
 
     private static void removeLoadBalancerWithSharedIp() {
         try {
-            stingrayAdapter.deleteLoadBalancer(config, lb_2);
+            stingrayAdapter.deleteLoadBalancer(lb_2);
         } catch (Exception e) {
             if (e instanceof ObjectDoesNotExist) {
             } else {

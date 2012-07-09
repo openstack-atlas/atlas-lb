@@ -13,7 +13,7 @@
     <context:component-scan base-package="org.openstack.atlas.service.domain"/>
     <context:annotation-config/>
 
-    <bean id="entityManagerFactory1" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    <bean id="core_entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="persistenceXmlLocation" value="classpath:META-INF/lb-persistence.xml"/>
         <property name="persistenceUnitName" value="loadbalancing"/>
         <property name="dataSource" ref="loadBalancingDataSource"/>
@@ -38,10 +38,10 @@
         <property name="password" value="${database.password}"/>
     </bean>-->
 
-    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-        <property name="entityManagerFactory" ref="entityManagerFactory1"/>
+    <bean id="core_transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="core_entityManagerFactory"/>
     </bean>
-
+    
     <tx:annotation-driven/>
     <bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>
 

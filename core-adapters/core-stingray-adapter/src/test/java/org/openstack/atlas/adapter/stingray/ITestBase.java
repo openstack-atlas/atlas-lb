@@ -4,7 +4,8 @@ import com.riverbed.stingray.service.client.*;
 import org.apache.axis.AxisFault;
 import org.junit.Assert;
 import org.openstack.atlas.adapter.LoadBalancerAdapter;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.common.config.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.common.repository.HostRepository;
 import org.openstack.atlas.adapter.exception.BadRequestException;
 import org.openstack.atlas.adapter.stingray.helper.IpHelper;
 import org.openstack.atlas.adapter.stingray.helper.StingrayNameHelper;
@@ -13,6 +14,9 @@ import org.openstack.atlas.service.domain.entity.*;
 import org.openstack.atlas.service.domain.entity.LoadBalancer;
 import org.openstack.atlas.service.domain.entity.Node;
 import org.openstack.atlas.service.domain.entity.VirtualIp;
+import org.openstack.atlas.adapter.common.entity.Cluster;
+import org.openstack.atlas.adapter.common.entity.Host;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.MalformedURLException;
 import java.rmi.RemoteException;
@@ -41,7 +45,9 @@ public class ITestBase {
     public static final Integer ADDITIONAL_VIP_ID = 88888;
     public static final Integer ADDITIONAL_IPV6_VIP_ID = 88886;
 
+    @Autowired
     protected static LoadBalancerAdapter stingrayAdapter;
+
     protected static LoadBalancerEndpointConfiguration config;
     protected static LoadBalancer lb_1;
     protected static LoadBalancer lb_2;
@@ -53,8 +59,9 @@ public class ITestBase {
     protected static Node node_2_2;
     protected static Cluster cluster;
 
-    static  {
-        stingrayAdapter = new StingrayAdapterImpl();
+
+    static {
+
         try {
             setupEndpointConfiguration();
         } catch (MalformedURLException e) {
@@ -164,10 +171,6 @@ public class ITestBase {
         return StingrayNameHelper.generateTrafficIpGroupName(lb_1, vip);
     }
 
-    protected static String trafficIpGroupName(VirtualIpv6 ipv6Vip) throws BadRequestException {
-        return StingrayNameHelper.generateTrafficIpGroupName(lb_1, ipv6Vip);
-    }
-
     protected static String rateLimitName(LoadBalancer lb) throws BadRequestException {
         return StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lb);
     }
@@ -197,7 +200,7 @@ public class ITestBase {
 
     private static void createSimpleLoadBalancer() {
         try {
-            stingrayAdapter.createLoadBalancer(config, lb_1);
+            stingrayAdapter.createLoadBalancer(lb_1);
 
             final VirtualServerBasicInfo[] virtualServerBasicInfos = getServiceStubs().getVirtualServerBinding().getBasicInfo(new String[]{loadBalancerName(lb_1)});
             Assert.assertEquals(1, virtualServerBasicInfos.length);
@@ -262,7 +265,7 @@ public class ITestBase {
 
     protected static void removeLoadBalancer() {
         try {
-            stingrayAdapter.deleteLoadBalancer(config, lb_1);
+            stingrayAdapter.deleteLoadBalancer(lb_1);
         } catch (Exception e) {
             if (e instanceof ObjectDoesNotExist) {
             } else {

@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface UsageAdapter {
 
-    Map<Integer, Long> getTransferBytesIn(LoadBalancerEndpointConfiguration config, List<LoadBalancer> lbs) throws AdapterException;
+    Map<Integer, Long> getTransferBytesIn(List<LoadBalancer> lbs) throws AdapterException;
 
-    Map<Integer, Long> getTransferBytesOut(LoadBalancerEndpointConfiguration config, List<LoadBalancer> lbs) throws AdapterException;
+    Map<Integer, Long> getTransferBytesOut(List<LoadBalancer> lbs) throws AdapterException;
 }

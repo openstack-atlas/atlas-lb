@@ -6,19 +6,31 @@ import org.apache.axis.types.UnsignedInt;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openstack.atlas.adapter.LoadBalancerAdapter;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.common.config.LoadBalancerEndpointConfiguration;
+import org.openstack.atlas.adapter.common.config.PublicApiServiceConfigurationKeys;
+import org.openstack.atlas.adapter.common.entity.Cluster;
+import org.openstack.atlas.adapter.common.entity.Host;
+import org.openstack.atlas.adapter.common.entity.LoadBalancerHost;
+import org.openstack.atlas.adapter.common.repository.HostRepository;
+import org.openstack.atlas.adapter.common.service.AdapterVirtualIpService;
+import org.openstack.atlas.adapter.common.service.HostService;
 import org.openstack.atlas.adapter.exception.AdapterException;
 import org.openstack.atlas.adapter.exception.BadRequestException;
 import org.openstack.atlas.adapter.exception.RollbackException;
 import org.openstack.atlas.adapter.stingray.helper.*;
 import org.openstack.atlas.adapter.stingray.service.StingrayServiceStubs;
 import org.openstack.atlas.common.converters.StringConverter;
+import org.openstack.atlas.common.crypto.CryptoUtil;
+import org.openstack.atlas.common.crypto.exception.DecryptException;
 import org.openstack.atlas.common.ip.exception.IPStringConversionException1;
 import org.openstack.atlas.datamodel.CoreAlgorithmType;
 import org.openstack.atlas.datamodel.CoreHealthMonitorType;
 import org.openstack.atlas.datamodel.CorePersistenceType;
 import org.openstack.atlas.datamodel.CoreProtocolType;
 import org.openstack.atlas.service.domain.entity.*;
+import org.openstack.atlas.service.domain.exception.PersistenceServiceException;
+import org.openstack.atlas.common.config.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Primary;
 
@@ -39,8 +51,93 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     public static final VirtualServerRule ruleRateLimitNonHttp = new VirtualServerRule(RATE_LIMIT_NON_HTTP, true, VirtualServerRuleRunFlag.run_every);
     public static final VirtualServerRule ruleXForwardedFor = new VirtualServerRule(XFF, true, VirtualServerRuleRunFlag.run_every);
 
+
+
+    @Autowired
+    protected HostService hostService;
+
+
+    @Autowired
+    protected HostRepository hostRepository;
+
+
+    @Autowired
+    protected AdapterVirtualIpService virtualIpService;
+
+
+    protected String logFileLocation;
+
+    protected String adapterConfigFileLocation;
+
+
+    @Autowired
+    public StingrayAdapterImpl(Configuration configuration) {
+
+        logFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.access_log_file_location);
+        adapterConfigFileLocation = configuration.getString(PublicApiServiceConfigurationKeys.adapter_config_file_location);
+
+        //Read settings from our adapter config file.
+    }
+
+
+    private LoadBalancerEndpointConfiguration getConfig(Integer loadBalancerId)  throws AdapterException
+    {
+        LoadBalancerEndpointConfiguration config = getConfigbyLoadBalancerId(loadBalancerId);
+        if (config == null)
+            throw new AdapterException("Adapter error: Cannot fetch information about LB devices");
+
+        return config;
+    }
+
+    private LoadBalancerEndpointConfiguration getConfigbyLoadBalancerId(Integer lbId) {
+
+        if (hostService == null) {
+            LOG.debug("hostService is null !");
+        }
+
+        LoadBalancerHost lbHost = hostService.getLoadBalancerHost(lbId);
+        Host host = lbHost.getHost();
+        return getConfigbyHost(host);
+    }
+
+
+    private LoadBalancerEndpointConfiguration getConfigbyHost(Host host) {
+        try {
+            Cluster cluster = host.getCluster();
+            Host endpointHost = hostRepository.getEndPointHost(cluster.getId());
+            List<String> failoverHosts = hostRepository.getFailoverHostNames(cluster.getId());
+            return new LoadBalancerEndpointConfiguration(endpointHost, cluster.getUsername(), CryptoUtil.decrypt(cluster.getPassword()), host, failoverHosts, logFileLocation);
+        } catch(DecryptException except)
+        {
+            LOG.error(String.format("Decryption exception: ", except.getMessage()));
+            return null;
+        }
+    }
+
     @Override
-    public void createLoadBalancer(LoadBalancerEndpointConfiguration config, LoadBalancer lb) throws AdapterException {
+    public void createLoadBalancer(LoadBalancer lb) throws AdapterException {
+
+        // Choose a host for this new load Balancer
+        Host host = hostService.getDefaultActiveHost();
+
+        if (host == null)
+            throw new AdapterException("Cannot retrieve default active host from persistence layer");
+
+        String serviceUrl = host.getEndpoint();
+
+        LoadBalancerHost lbHost = new LoadBalancerHost(lb.getId(), host);
+
+        try {
+            LOG.debug("Before calling hostService.createLoadBalancerHost()");
+            hostService.createLoadBalancerHost(lbHost);
+            // Also assign the Virtual IP for this load balancer
+            virtualIpService.assignVipsToLoadBalancer(lb);
+        } catch (PersistenceServiceException e) {
+            throw new AdapterException("Cannot assign Vips to the loadBalancer : " + e.getMessage());
+        }
+
+        LoadBalancerEndpointConfiguration config = getConfig(lb.getId());
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
             final String virtualServerName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lb);
@@ -51,7 +148,7 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
             LOG.debug(String.format("Creating load balancer '%s'...", virtualServerName));
 
             try {
-                createNodePool(config, lb.getId(), lb.getAccountId(), lb.getNodes());
+                createNodePool(config, lb.getAccountId(), lb.getId(), lb.getNodes());
             } catch (Exception e) {
                 deleteNodePool(serviceStubs, poolName);
                 throw new RollbackException(rollBackMessage, e);
@@ -77,15 +174,15 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
                 setLoadBalancingAlgorithm(serviceStubs, lb.getAccountId(), lb.getId(), algorithm);
 
                 if (lb.getSessionPersistence() != null && lb.getSessionPersistence().getPersistenceType() != null) {
-                    setSessionPersistence(config, lb.getId(), lb.getAccountId(), lb.getSessionPersistence());
+                    setSessionPersistence(lb.getAccountId(),lb.getId(),  lb.getSessionPersistence());
                 }
 
                 if (lb.getHealthMonitor() != null) {
-                    updateHealthMonitor(config, lb.getId(), lb.getAccountId(), lb.getHealthMonitor());
+                    updateHealthMonitor(lb.getAccountId(),lb.getId(),  lb.getHealthMonitor());
                 }
 
                 if (lb.getConnectionThrottle() != null) {
-                    updateConnectionThrottle(config, lb.getId(), lb.getAccountId(), lb.getConnectionThrottle());
+                    updateConnectionThrottle(lb.getAccountId(),lb.getId(), lb.getConnectionThrottle());
                 }
 
                 if (lb.getProtocol().equals(CoreProtocolType.HTTP)) {
@@ -94,14 +191,14 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
                 }
                 afterLoadBalancerCreate(config, lb);
             } catch (Exception e) {
-                deleteLoadBalancer(config, lb);
+                deleteLoadBalancer(lb);
                 throw new RollbackException(rollBackMessage, e);
             }
 
             LOG.info(String.format("Load balancer '%s' successfully created.", virtualServerName));
         } catch (RemoteException e) {
             throw new AdapterException(e);
-        } 
+        }
     }
 
     /**
@@ -119,7 +216,10 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void updateLoadBalancer(LoadBalancerEndpointConfiguration config, LoadBalancer lb) throws AdapterException {
+    public void updateLoadBalancer(LoadBalancer lb) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lb.getId());
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
             // Core spec only allows modification of algorithm attribute for now
@@ -130,16 +230,19 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void deleteLoadBalancer(LoadBalancerEndpointConfiguration config, LoadBalancer lb) throws AdapterException {
+    public void deleteLoadBalancer(LoadBalancer lb) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lb.getId());
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
-            final String virtualServerName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lb.getId(), lb.getAccountId());
-            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lb.getId(), lb.getAccountId());
+            final String virtualServerName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lb);
+            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lb);
             final String[][] trafficIpGroups = serviceStubs.getVirtualServerBinding().getListenTrafficIPGroups(new String[]{virtualServerName});
 
             LOG.debug(String.format("Deleting load balancer '%s'...", virtualServerName));
 
-            deleteHealthMonitor(config, lb.getId(), lb.getAccountId());
+            deleteHealthMonitor(lb.getAccountId(), lb.getId());
             deleteVirtualServer(serviceStubs, virtualServerName);
             deleteNodePool(serviceStubs, poolName);
             deleteProtectionCatalog(serviceStubs, poolName);
@@ -154,10 +257,13 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void createNodes(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, Set<Node> nodes) throws AdapterException {
+    public void createNodes(Integer accountId, Integer lbId, Set<Node> nodes) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
-            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, lbId);
             final String rollBackMessage = "Set nodes request canceled.";
             final String[][] enabledNodesBackup;
             final String[][] disabledNodesBackup;
@@ -186,7 +292,7 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
                 final List<String> mergedIpAddresses = NodeHelper.getMergedIpAddresses(getNodesWithCondition(nodes, false), new String[0], disabledNodesBackup[0], new String[0]);
                 setDisabledNodes(config, poolName, mergedIpAddresses);
 //                setDrainingNodes(config, poolName, getNodesWithCondition(nodes, NodeCondition.DRAINING));
-                setNodeWeights(config, lbId, accountId, nodes);
+                setNodeWeights(config, accountId, lbId,  nodes);
             } catch (RemoteException e) {
                 if (e instanceof InvalidInput) {
                     LOG.error(String.format("Error setting node conditions for pool '%s'. All nodes cannot be disabled.", poolName), e);
@@ -206,10 +312,13 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void deleteNodes(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, Set<Node> nodes) throws AdapterException {
+    public void deleteNodes(Integer accountId, Integer lbId, Set<Node> nodes) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
-            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, lbId);
             final String rollBackMessage = "Remove node request canceled.";
 
             try {
@@ -226,10 +335,13 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void updateNode(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, Node node) throws AdapterException {
+    public void updateNode(Integer accountId, Integer lbId, Node node) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
-            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, lbId);
             final String rollBackMessage = "Update node request canceled.";
             final String[][] enabledNodesBackup;
             final String[][] disabledNodesBackup;
@@ -291,7 +403,7 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
 //                setDrainingNodes(config, poolName, getNodesWithCondition(nodes, NodeCondition.DRAINING));
                 final PoolWeightingsDefinition[][] nodesWeightings = serviceStubs.getPoolBinding().getNodesWeightings(new String[]{poolName}, ListUtil.wrap(ListUtil.wrap(nodeAsString)));
                 if (nodesWeightings[0][0].getWeighting() != node.getWeight()) {
-                    setNodeWeights(config, lbId, accountId, nodes);
+                    setNodeWeights(config,  accountId, lbId,nodes);
                 }
             } catch (RemoteException e) {
                 if (e instanceof InvalidInput) {
@@ -312,10 +424,13 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void updateConnectionThrottle(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, ConnectionThrottle connectionThrottle) throws AdapterException {
+    public void updateConnectionThrottle(Integer accountId, Integer lbId, ConnectionThrottle connectionThrottle) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
-            final String virtualServerName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+            final String virtualServerName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, lbId);
             final String protectionClassName = virtualServerName;
             final String rollBackMessage = "Update connection throttle request canceled.";
 
@@ -353,16 +468,19 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void deleteConnectionThrottle(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId) throws AdapterException {
+    public void deleteConnectionThrottle(Integer accountId, Integer lbId) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
-            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId( accountId, lbId);
             final String protectionClassName = poolName;
             final String rollBackMessage = "Delete connection throttle request canceled.";
 
             LOG.debug(String.format("Deleting connection throttle for node pool '%s'...", poolName));
 
             try {
-                zeroOutConnectionThrottleConfig(config, lbId, accountId);
+                zeroOutConnectionThrottleConfig(config, accountId, lbId );
             } catch (RollbackException e) {
                 throw new RollbackException(rollBackMessage, e);
             }
@@ -374,10 +492,13 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void updateHealthMonitor(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, HealthMonitor healthMonitor) throws AdapterException {
+    public void updateHealthMonitor(Integer accountId, Integer lbId, HealthMonitor healthMonitor) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
-            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, lbId);
             final String monitorName = poolName;
 
             LOG.debug(String.format("Updating health monitor for node pool '%s'.", poolName));
@@ -413,10 +534,13 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void deleteHealthMonitor(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId) throws AdapterException {
+    public void deleteHealthMonitor(Integer accountId, Integer lbId) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
-            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, lbId);
             final String monitorName = poolName;
 
             String[][] monitors = new String[1][1];
@@ -439,10 +563,13 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void setSessionPersistence(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId, SessionPersistence sessionPersistence) throws AdapterException {
+    public void setSessionPersistence(Integer accountId, Integer lbId, SessionPersistence sessionPersistence) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
-            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, lbId);
             boolean httpCookieClassConfigured = false;
             boolean sourceIpClassConfigured = false;
             final String rollBackMessage = "Update session persistence request canceled.";
@@ -496,10 +623,13 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
     }
 
     @Override
-    public void deleteSessionPersistence(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId) throws AdapterException {
+    public void deleteSessionPersistence(Integer accountId, Integer lbId) throws AdapterException {
+
+        LoadBalancerEndpointConfiguration config = getConfig(lbId);
+
         try {
             StingrayServiceStubs serviceStubs = getServiceStubs(config);
-            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+            final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, lbId);
             final String rollBackMessage = "Remove session persistence request canceled.";
 
             try {
@@ -527,8 +657,8 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
         return StingrayServiceStubs.getServiceStubs(config.getEndpointUrl(), config.getUsername(), config.getPassword());
     }
 
-    protected void setLoadBalancingAlgorithm(StingrayServiceStubs serviceStubs, Integer accountId, Integer lbId, String algorithm) throws AdapterException {
-        final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+    protected void setLoadBalancingAlgorithm(StingrayServiceStubs serviceStubs,Integer accountId, Integer lbId,  String algorithm) throws AdapterException {
+        final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, lbId);
 
         try {
             LOG.debug(String.format("Setting load balancing algorithm for node pool '%s'...", poolName));
@@ -544,7 +674,7 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
 
     protected void addVirtualIps(LoadBalancerEndpointConfiguration config, LoadBalancer lb) throws RemoteException, AdapterException {
         StingrayServiceStubs serviceStubs = getServiceStubs(config);
-        final String virtualServerName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lb.getId(), lb.getAccountId());
+        final String virtualServerName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lb);
         String[] failoverTrafficManagers = config.getFailoverHostNames().toArray(new String[config.getFailoverHostNames().size()]);
         final String rollBackMessage = "Add virtual ips request canceled.";
         String[][] currentTrafficIpGroups;
@@ -568,26 +698,12 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
             updatedTrafficIpGroups.addAll(Arrays.asList(currentTrafficIpGroups[0]));
         }
 
-        // Add new traffic ip groups for IPv4 vips
+        // Add new traffic ip groups for IPv4 and IPv6 vips
         for (LoadBalancerJoinVip loadBalancerJoinVipToAdd : lb.getLoadBalancerJoinVipSet()) {
             String newTrafficIpGroup = StingrayNameHelper.generateTrafficIpGroupName(lb, loadBalancerJoinVipToAdd.getVirtualIp());
             newTrafficIpGroups.add(newTrafficIpGroup);
             updatedTrafficIpGroups.add(newTrafficIpGroup);
             createTrafficIpGroup(config, serviceStubs, loadBalancerJoinVipToAdd.getVirtualIp().getAddress(), newTrafficIpGroup);
-        }
-
-        // Add new traffic ip groups for IPv6 vips
-        for (LoadBalancerJoinVip6 loadBalancerJoinVip6ToAdd : lb.getLoadBalancerJoinVip6Set()) {
-            String newTrafficIpGroup = StingrayNameHelper.generateTrafficIpGroupName(lb, loadBalancerJoinVip6ToAdd.getVirtualIp());
-            newTrafficIpGroups.add(newTrafficIpGroup);
-            updatedTrafficIpGroups.add(newTrafficIpGroup);
-            try {
-                createTrafficIpGroup(config, serviceStubs, loadBalancerJoinVip6ToAdd.getVirtualIp().getDerivedIpString(), newTrafficIpGroup);
-            } catch (IPStringConversionException1 e) {
-                LOG.error("Rolling back newly created traffic ip groups...", e);
-                deleteTrafficIpGroups(serviceStubs, newTrafficIpGroups);
-                throw new RollbackException("Cannot derive name from IPv6 virtual ip.", e);
-            }
         }
 
         try {
@@ -657,9 +773,9 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
         }
     }
 
-    protected void createNodePool(LoadBalancerEndpointConfiguration config, Integer loadBalancerId, Integer accountId, Collection<Node> nodes) throws RemoteException, AdapterException {
+    protected void createNodePool(LoadBalancerEndpointConfiguration config,Integer accountId, Integer loadBalancerId,  Collection<Node> nodes) throws RemoteException, AdapterException {
         StingrayServiceStubs serviceStubs = getServiceStubs(config);
-        final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(loadBalancerId, accountId);
+        final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, loadBalancerId);
 
         LOG.debug(String.format("Creating pool '%s' and setting nodes...", poolName));
         String[][] ipAddresses = new String[1][];
@@ -670,7 +786,7 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
         final List<String> nodesAsStingrayString = NodeHelper.getIpAddressesFromNodes(nodeToDisable);
         setDisabledNodes(config, poolName, nodesAsStingrayString);
 //        setDrainingNodes(config, poolName, getNodesWithCondition(allNodes, NodeCondition.DRAINING));
-        setNodeWeights(config, loadBalancerId, accountId, nodes);
+        setNodeWeights(config,accountId, loadBalancerId,  nodes);
     }
 
     protected List<Node> getNodesWithCondition(Collection<Node> nodes, Boolean enabled) {
@@ -690,13 +806,13 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
         serviceStubs.getPoolBinding().setDisabledNodes(new String[]{poolName}, ListUtil.wrap(ListUtil.convert(nodesToDisable)));
     }
 
-    protected void setNodeWeights(LoadBalancerEndpointConfiguration config, Integer lbId, Integer accountId, Collection<Node> nodes) throws RemoteException, AdapterException {
-        setNodeWeights(config, lbId, accountId, buildPoolWeightingsDefinition(nodes));
+    protected void setNodeWeights(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId,  Collection<Node> nodes) throws RemoteException, AdapterException {
+        setNodeWeights(config, accountId, lbId, buildPoolWeightingsDefinition(nodes));
     }
 
-    protected void setNodeWeights(LoadBalancerEndpointConfiguration config, Integer lbId, Integer accountId, PoolWeightingsDefinition[] definitions) throws RemoteException, AdapterException {
+    protected void setNodeWeights(LoadBalancerEndpointConfiguration config, Integer accountId, Integer lbId,  PoolWeightingsDefinition[] definitions) throws RemoteException, AdapterException {
         StingrayServiceStubs serviceStubs = getServiceStubs(config);
-        final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(lbId, accountId);
+        final String poolName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, lbId );
         final String rollBackMessage = "Update node weights request canceled.";
 
         try {
@@ -813,8 +929,8 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
         }
     }
 
-    protected void zeroOutConnectionThrottleConfig(LoadBalancerEndpointConfiguration config, Integer loadBalancerId, Integer accountId) throws RemoteException, AdapterException {
-        final String protectionClassName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(loadBalancerId, accountId);
+    protected void zeroOutConnectionThrottleConfig(LoadBalancerEndpointConfiguration config, Integer accountId, Integer loadBalancerId) throws RemoteException, AdapterException {
+        final String protectionClassName = StingrayNameHelper.generateNameWithAccountIdAndLoadBalancerId(accountId, loadBalancerId);
 
         LOG.debug(String.format("Zeroing out connection throttle settings for protection class '%s'.", protectionClassName));
 
@@ -822,7 +938,7 @@ public class StingrayAdapterImpl implements LoadBalancerAdapter {
         throttle.setMaxRequestRate(0);
         throttle.setRateInterval(0);
 
-        updateConnectionThrottle(config, loadBalancerId, accountId, throttle);
+        updateConnectionThrottle(accountId, loadBalancerId, throttle);
 
         LOG.info(String.format("Successfully zeroed out connection throttle settings for protection class '%s'.", protectionClassName));
     }

@@ -2,7 +2,6 @@ package org.openstack.atlas.rax.jobs.usage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openstack.atlas.adapter.LoadBalancerEndpointConfiguration;
 import org.openstack.atlas.adapter.UsageAdapter;
 import org.openstack.atlas.adapter.exception.AdapterException;
 import org.openstack.atlas.jobs.usage.UsageCollector;
@@ -16,8 +15,8 @@ public class RaxUsageCollector extends UsageCollector {
     private final Log LOG = LogFactory.getLog(RaxUsageCollector.class);
     protected Map<Integer, Integer> currentConnectionMap;
 
-    public RaxUsageCollector(LoadBalancerEndpointConfiguration config, UsageAdapter usageAdapter) {
-        super(config, usageAdapter);
+    public RaxUsageCollector(UsageAdapter usageAdapter) {
+        super(usageAdapter);
     }
 
     @Override
@@ -25,8 +24,8 @@ public class RaxUsageCollector extends UsageCollector {
         super.execute(loadBalancers);
 
         try {
-            LOG.info(String.format("Retrieving current connection count from '%s' (%s)...", config.getHost().getName(), config.getHost().getEndpoint()));
-            currentConnectionMap = ((RaxZxtmUsageAdapter) usageAdapter).getCurrentConnectionCount(config, loadBalancers);
+            LOG.info("Retrieving current connection count...");
+            currentConnectionMap = ((RaxZxtmUsageAdapter) usageAdapter).getCurrentConnectionCount(loadBalancers);
 
             LOG.debug("Listing current connection counts...");
             for (Integer loadBalancerId : currentConnectionMap.keySet()) {
