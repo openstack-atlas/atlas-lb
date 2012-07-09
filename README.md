@@ -8,7 +8,7 @@ http://wiki.openstack.org/Atlas-LB
 
 ### Requirements
 ----------------
-1. Java >= 1.5
+1. Java >= 1.5  (note: Java 1.7 seems to have a compatibility issue with JAXB, so until we fix this, better to be avoided).
 
 2. Apache Maven == 2.2.1
 
@@ -39,7 +39,13 @@ http://wiki.openstack.org/Atlas-LB
 2. Configure
 
     Copy all of the configuration files from atlas-lb/core-api/core-public-web/src/deb/contrib/config
-    and put it under your /etc/openstack/atlas directory. Make sure you update /etc/openstack/atlas/public-api.conf with your database username/password.
+    and put it under your /etc/openstack/atlas directory. 
+    
+    Make sure you update /etc/openstack/atlas/public-api.conf with:
+    
+      * your database username/password.
+      * If you are not using null (fake) adapter which is the default one configured, choose another adapter.
+    
 
 3. Start atlas:
 

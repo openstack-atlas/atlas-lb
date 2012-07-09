@@ -10,7 +10,7 @@ import java.util.Set;
 
 public final class StingrayNameHelper {
 
-    public static String generateNameWithAccountIdAndLoadBalancerId(Integer lbId, Integer accountId) throws BadRequestException {
+    public static String generateNameWithAccountIdAndLoadBalancerId(Integer accountId , Integer lbId) throws BadRequestException {
         if (lbId == null) {
             throw new BadRequestException("Missing id for load balancer.");
         }
@@ -22,13 +22,7 @@ public final class StingrayNameHelper {
     }
 
     public static String generateNameWithAccountIdAndLoadBalancerId(LoadBalancer lb) throws BadRequestException {
-        if (lb.getAccountId() == null)
-            throw new BadRequestException(
-                    "Missing account id for load balancer.");
-        if (lb.getId() == null)
-            throw new BadRequestException(
-                    "Missing id for load balancer.");
-        return generateNameWithAccountIdAndLoadBalancerId(lb.getId(), lb.getAccountId());
+        return generateNameWithAccountIdAndLoadBalancerId( lb.getAccountId(), lb.getId());
     }
 
     public static Set<String> generateNamesWithAccountIdAndLoadBalancerId(Set<LoadBalancer> loadBalancers) throws BadRequestException {
@@ -40,15 +34,17 @@ public final class StingrayNameHelper {
     }
 
     public static String generateTrafficIpGroupName(LoadBalancer lb, Integer vipId) throws BadRequestException {
-        if (vipId == null)
+        if (vipId == null) {
             throw new BadRequestException("Missing id for virtual ip.");
+        }
+        if (lb.getAccountId() == null) {
+            throw new BadRequestException("Missing account id for load balancer.");
+        }
         return lb.getAccountId() + "_" + vipId;
     }
 
     public static String generateTrafficIpGroupName(LoadBalancer lb, VirtualIp vip) throws BadRequestException {
-        if (vip.getId() == null)
-            throw new BadRequestException("Missing id for virtual ip.");
-        return lb.getAccountId() + "_" + vip.getId();
+        return generateTrafficIpGroupName(lb, vip.getId());
     }
 
 
