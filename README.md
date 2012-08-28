@@ -20,7 +20,7 @@ http://wiki.openstack.org/Atlas-LB
 
 4. MySQL >= 5.x
 
-    Create a MySQL database named 'openstack_atlas'
+    Create 2 MySQL databases named 'loadbalancing' and 'loadbalancingadapter'
 
 5. Glassfish == 3.0.1 (Optional as Atlas comes with an embedded jetty server)
 
