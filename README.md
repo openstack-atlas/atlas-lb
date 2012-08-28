@@ -20,7 +20,9 @@ http://wiki.openstack.org/Atlas-LB
 
 4. MySQL >= 5.x
 
-    Create 2 MySQL databases named 'loadbalancing' and 'loadbalancingadapter'
+    * Create a MySQL database named 'loadbalancing'. 
+    
+    * Optionally create another database called 'loadbalancingadapter' if your adapter extends the default LoadBalancerAdapterBase class (instead of simply implementing the LoadBalancerAdapter interface). See the null (fake) adapter as an example for an adapter that uses the default base implementation.
 
 5. Glassfish == 3.0.1 (Optional as Atlas comes with an embedded jetty server)
 
@@ -55,11 +57,26 @@ http://wiki.openstack.org/Atlas-LB
 
     `./bin/debug.sh`
 
-4. If atlas is properly started, it should have created the necessary database tables for you. Seed the 'openstack_atlas'
-    database with some fake data (cluster, hosts, virtual ips, etc.). A sample for testing is here: atlas-lb/core-api/core-public-web/src/deb/contrib/db/ directory
+4. If atlas is properly started, it should have created the necessary database tables for you. 
+
+   * Seed the 'loadbalancing' database with some fake data. A sample for testing is here: atlas-lb/core-api/core-public-web/src/deb/contrib/db/ directory.
+   
+   * If your adapter is relying on the default strategy for managing its devices (extending LoadBalancerAdapterBase), also seed the 'loadbalancingadapter' database with some fake data (your vips, your devices, etc.). A sample for testing used by the netscaler adapter can be found here: ./core-adapters/core-netscaler-adapter/src/main/resources/core-netscaler-adapter-seed.sql
+   
+   You should modify the SQL data in these files to match your deployment details. For the 'loadbalancingadapter' DB, the passwords of your hosts (loadbalancing devices) are stored in an encrypted form in your 'adapter_host' table. You can use the 'cryptotool.sh to encrypt a password and store in the database using the following command:
+   
+       bin/cryptotool.sh -enc <password_in_clear>
+    
+   Similarly to decrypt a value found in the DB, you can use the following command can be used:
+   
+       bin/cryptotool.sh -dec <encrypted_password>  
+   
+   The encryption/decryption key used is the one configured in your public-api.conf file.
+   
+   
 
 Now you can access the Atlas REST API eg. do a GET on [http://localhost:8080/v1.1/1000/loadbalancers](http://localhost:8080/v1.1/1000/loadbalancers)
-where 1000 is a tenant_id. What does it return? May be its time to do a POST. More more operations, [http://wiki.openstack.org/Atlas-LB](http://wiki.openstack.org/Atlas-LB)
+where 1000 is a tenant_id. What does it return? May be it's time to do a POST. More more operations, [http://wiki.openstack.org/Atlas-LB](http://wiki.openstack.org/Atlas-LB)
 
 
 ### Deploy under Glassfish Application Server
