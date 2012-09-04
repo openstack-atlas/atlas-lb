@@ -104,6 +104,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
 
         VirtualIp vip = allocateIpv6VirtualIp(loadBalancer);
 
+
         LoadBalancerJoinVip joinVip = new LoadBalancerJoinVip(loadBalancer.getPort(), loadBalancer, vip);
 
         lbJoinVipConfig.add(joinVip);
@@ -189,7 +190,7 @@ public class VirtualIpServiceImpl implements VirtualIpService {
         vip.setVipType(VirtualIpType.PUBLIC);
 
         setVirtualIpAccount(loadBalancer, vip);
-        virtualIpRepository.create(vip);
+        vip = virtualIpRepository.create(vip);
         return vip;
     }
 
