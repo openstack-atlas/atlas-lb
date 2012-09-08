@@ -42,24 +42,34 @@ public class PluginConfiguration {
      * Returns a list of all spring configurations files required by the core.
      */
     public static List<String> getCoreContexts(String adapterName) {
-        List<String> contexts = new ArrayList<String>();
-        contexts.add("api-context.xml");
-        contexts.add("persistence-context.xml");    
-        contexts.add("data-model-context.xml");
+        List<String> core_contexts = new ArrayList<String>();
+        core_contexts.add("api-context.xml");
+        core_contexts.add("persistence-context.xml");
+        core_contexts.add("data-model-context.xml");
         //contexts.add("dozer-context.xml");
-        contexts.add(adapterName + "-adapter-context.xml");        
-        validateCoreContexts(contexts);
-        List<String> optional_contexts = new ArrayList<String>();
-        // The adapter layer may have a persistence layer or not.
-        optional_contexts.add("adapter-persistence-context.xml");  
-        validateOptionalContexts(optional_contexts);
-        List<String> core_contexts = new ArrayList<String>(contexts);
-        core_contexts.addAll(optional_contexts);
-    
-        
+        core_contexts.add(adapterName + "-adapter-context.xml");
+        validateCoreContexts(core_contexts);
+
         return core_contexts;
     }
 
+
+    /**
+     * Returns a list of all spring configurations files (including optional ones) required by the core.
+     */
+    public static List<String> getCoreAndOptionalContexts(String adapterName) {
+
+        List<String> coreContexts = getCoreContexts(adapterName);
+
+        // The adapter layer may have a persistence layer or not.
+        List<String> optional_contexts = new ArrayList<String>();
+        optional_contexts.add("adapter-persistence-context.xml");
+        validateOptionalContexts(optional_contexts);
+        List<String> allContexts = new ArrayList<String>(coreContexts);
+        allContexts.addAll(optional_contexts);
+
+        return allContexts;
+    }
     /**
      * Prepends each of the core configuration file names with the extension name to derive the extension configuration
      * file name as per the naming convention. Eg. persistence-context.xml will become rax-persistence-context.xml
@@ -70,7 +80,10 @@ public class PluginConfiguration {
         for (String context : coreContexts) {
             extensionContexts.add(extensionName + "-" + context);
         }
-        validateOptionalContexts(extensionContexts);
+
+        // The adapter layer may have a persistence layer or not.
+        extensionContexts.add("adapter-persistence-context.xml");
+
         return extensionContexts;
     }
 

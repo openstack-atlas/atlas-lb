@@ -22,6 +22,7 @@ import java.util.Set;
 public class CtxsLoadBalancerRepositoryImpl extends LoadBalancerRepositoryImpl {
 
     @Override
+    @Transactional(value="core_transactionManager")
     public LoadBalancer create(LoadBalancer loadBalancer) {
         final Set<CertificateRef> certificateRefs = ((CtxsLoadBalancer)loadBalancer).getCertificates();
         ((CtxsLoadBalancer) loadBalancer).setCertificates(null);

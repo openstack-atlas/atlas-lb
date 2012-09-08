@@ -111,7 +111,7 @@ public class NSAdapterUtils
 	 	
         try 
         {
-			JAXBContext ctxt = JAXBContext.newInstance("com.citrix.cloud.org.openstack.atlas.adapter.temp.atlas.docs.loadbalancers.api.v1");
+			JAXBContext ctxt = JAXBContext.newInstance("com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1");
 			Unmarshaller  u = ctxt.createUnmarshaller() ; 
 			return u.unmarshal( new StreamSource( new StringReader( response) ) );
 		} 
@@ -273,11 +273,10 @@ public class NSAdapterUtils
     }
 
     
-    public com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node translateNode(Node node, boolean forUpdate)
+    private void translateNode(Node node, com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node nsNode, boolean forUpdate)
            throws BadRequestException
     {
 
-	   com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node nsNode = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node();
 
 	   Integer nodeid = node.getId();
 	   String address = node.getAddress();
@@ -306,10 +305,14 @@ public class NSAdapterUtils
        } else {
 			nsNode.setCondition(com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.NodeCondition.DISABLED);
 		}
-
-		return nsNode;	
 	}
 
+
+    public void populateNSNode(Node node, com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node nsNode)
+            throws BadRequestException
+    {
+        translateNode(node, nsNode, true);
+    }
 
     public void populateNSNodes(Collection<Node> nodes, List<com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node> nsNodes)
            throws BadRequestException
@@ -321,7 +324,9 @@ public class NSAdapterUtils
 			boolean forUpdate = false;
             for (Node node : nodes)
     	    {
-               com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node nsNode = translateNode(node, forUpdate);
+
+               com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node nsNode = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node();
+               translateNode(node, nsNode, forUpdate);
                nsNodes.add(nsNode);
             }
     	}
