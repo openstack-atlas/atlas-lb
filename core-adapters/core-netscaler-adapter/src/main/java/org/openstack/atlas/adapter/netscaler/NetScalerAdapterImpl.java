@@ -150,8 +150,20 @@ public class NetScalerAdapterImpl extends LoadBalancerAdapterBase {
     public void doUpdateNode(Integer accountId, Integer lbId, Node node, LoadBalancerHost lbHost)
         throws AdapterException 
     {
+        
+        String serviceUrl = lbHost.getHost().getEndpoint();
 
-        LOG.info("updateNodes");// NOP
+        String resourceType = "loadbalancers";
+        Integer resourceId = lbId;
+        String childResourceType = "nodes";
+
+        com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node nsNode = new com.citrix.cloud.netscaler.atlas.docs.loadbalancers.api.v1.Node();
+		nsAdapterUtils.populateNSNode(node, nsNode);
+        String requestBody = nsAdapterUtils.getRequestBody(nsNode);
+
+		String resourceUrl = nsAdapterUtils.getLBURLStr(serviceUrl, accountId, resourceType, resourceId,childResourceType) + "/" + node.getId();
+		
+		nsAdapterUtils.performRequest("PUT", resourceUrl, requestBody);
     }
 
     
@@ -251,7 +263,7 @@ public class NetScalerAdapterImpl extends LoadBalancerAdapterBase {
     }
 
     @Override
-    public void doDeleteSessionPersistence(Integer lbId, Integer accountId, LoadBalancerHost lbHost)
+    public void doDeleteSessionPersistence(Integer accountId, Integer lbId, LoadBalancerHost lbHost)
         throws AdapterException 
     {
         String serviceUrl = lbHost.getHost().getEndpoint();

@@ -14,7 +14,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>ctxs-adapter-common</module>
+	<module>ctxs-adapter-common</module>
         <module>ctxs-netscaler-adapter</module>
     </modules>
 

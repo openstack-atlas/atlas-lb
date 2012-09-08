@@ -51,6 +51,7 @@ public class CtxsLoadBalancersResource extends org.openstack.atlas.api.resource.
     public Response create(LoadBalancer _loadBalancer) {
 
         ValidatorResult result = validator.validate(_loadBalancer, HttpRequestType.POST);
+
         if (!result.passedValidation()) {
             return ResponseFactory.getValidationFaultResponse(result);
         }

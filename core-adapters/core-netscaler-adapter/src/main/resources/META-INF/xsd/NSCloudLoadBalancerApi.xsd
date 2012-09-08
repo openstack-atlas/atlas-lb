@@ -71,6 +71,7 @@
         </xsd:sequence>
      </xsd:complexType>
 
+    <xsd:element name="sessionPersistence" type="tns:sessionPersistence" />
 
     <xsd:complexType name="sessionPersistence">
         <xsd:attribute name="persistenceType" type="tns:persistenceType"/>
