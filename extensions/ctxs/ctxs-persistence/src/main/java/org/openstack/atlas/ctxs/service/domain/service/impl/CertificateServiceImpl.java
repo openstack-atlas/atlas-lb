@@ -12,6 +12,7 @@ import org.openstack.atlas.ctxs.service.domain.service.CertificateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.openstack.atlas.service.domain.exception.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -21,6 +22,7 @@ public class CertificateServiceImpl implements CertificateService{
     protected CertificateRepository certificateRepository;
 
     @Override
+    @Transactional(value="core_transactionManager")
     public Certificate createCertificate(Certificate certificate, org.openstack.atlas.api.v1.extensions.ctxs.Certificate apiCert) throws  EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException, BadRequestException {
         try {
             if(certificate.getKcontent() != null)
@@ -39,6 +41,7 @@ public class CertificateServiceImpl implements CertificateService{
     }
 
     @Override
+    @Transactional(value="core_transactionManager")
     public String delete(Integer accountId, Integer id) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException, BadRequestException {
 
         Certificate dbcert = null;
@@ -67,6 +70,7 @@ public class CertificateServiceImpl implements CertificateService{
     }
 
     @Override
+    @Transactional(value="core_transactionManager")
     public Certificate getCertificate(Integer id, Integer accountId) throws EntityNotFoundException, UnprocessableEntityException {
         Certificate dbcert = null;
         dbcert = certificateRepository.getByIdAndAccountId(id, accountId, true);

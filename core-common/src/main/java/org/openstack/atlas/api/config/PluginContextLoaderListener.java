@@ -23,12 +23,12 @@ public class PluginContextLoaderListener extends ContextLoaderListener {
         String extensionName = PluginConfiguration.getExtensionPrefix();
         String adapterName = PluginConfiguration.getAdapterPrefix();
         if (StringUtils.isEmpty(extensionName)) {
-            List<String>  coreContexts = PluginConfiguration.getCoreContexts(adapterName);
+            List<String>  coreContexts = PluginConfiguration.getCoreAndOptionalContexts(adapterName);
             coreContexts.add("dozer-context.xml");
             coreContexts = PluginConfiguration.classpathify(coreContexts);
             contexts.addAll(coreContexts);
         } else {
-            List<String>  coreContexts = PluginConfiguration.getCoreContexts(adapterName);
+            List<String>  coreContexts = PluginConfiguration.getCoreAndOptionalContexts(adapterName);
             coreContexts = PluginConfiguration.classpathify(coreContexts);
             contexts.addAll(coreContexts);
 
