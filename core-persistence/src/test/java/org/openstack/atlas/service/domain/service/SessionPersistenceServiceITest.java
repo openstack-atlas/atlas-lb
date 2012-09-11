@@ -141,6 +141,7 @@ public class SessionPersistenceServiceITest {
             loadBalancerRepository.changeStatus(loadBalancer, CoreLoadBalancerStatus.ACTIVE);
             sessionPersistence = StubFactory.createHydratedDomainSessionPersistence();
             sessionPersistence = sessionPersistenceService.update(loadBalancer.getId(), sessionPersistence);
+            System.out.println("status of loadbalancer: " + loadBalancer.getStatus());
             sessionPersistenceService.preDelete(loadBalancer.getId());
             sessionPersistenceService.delete(loadBalancer.getId());
         }
