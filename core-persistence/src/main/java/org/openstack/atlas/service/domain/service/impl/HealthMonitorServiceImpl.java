@@ -29,6 +29,14 @@ public class HealthMonitorServiceImpl implements HealthMonitorService {
     @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class})
     public HealthMonitor update(Integer loadBalancerId, HealthMonitor healthMonitor) throws PersistenceServiceException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getById(loadBalancerId);
+
+        String status = dbLoadBalancer.getStatus();
+
+
+        if (! (status.equals("ACTIVE") || status.equals("QUEUED") || status.equals("PENDING_UPDATE"))) {
+            throw new ImmutableEntityException("LoadBalancer status is not in a state that allows updates");
+        }
+
         HealthMonitor dbHealthMonitor = dbLoadBalancer.getHealthMonitor();
         HealthMonitor healthMonitorToUpdate = dbHealthMonitor == null ? healthMonitor : dbHealthMonitor;
         healthMonitorToUpdate.setLoadBalancer(dbLoadBalancer); // Needs to be set for hibernate
@@ -45,7 +53,19 @@ public class HealthMonitorServiceImpl implements HealthMonitorService {
     @Override
     @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class})
     public void preDelete(Integer loadBalancerId) throws PersistenceServiceException {
+
+
         if (healthMonitorRepository.getByLoadBalancerId(loadBalancerId) == null) throw new EntityNotFoundException("Health monitor not found");
+
+        LoadBalancer dbLoadBalancer =  loadBalancerRepository.getById(loadBalancerId);
+
+        String status = dbLoadBalancer.getStatus();
+
+
+        if (! (status.equals("ACTIVE") || status.equals("QUEUED") || status.equals("PENDING_UPDATE"))) {
+            throw new ImmutableEntityException("LoadBalancer status is not in a state that allows updates");
+        }
+
     }
 
     @Override

@@ -31,6 +31,14 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
     @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class})
     public SessionPersistence update(Integer loadBalancerId, SessionPersistence sessionPersistence) throws EntityNotFoundException, ImmutableEntityException, UnprocessableEntityException, BadRequestException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getById(loadBalancerId);
+
+        String status = dbLoadBalancer.getStatus();
+
+        if (! (status.equals("ACTIVE") || status.equals("QUEUED") || status.equals("PENDING_UPDATE"))) {
+            throw new ImmutableEntityException("LoadBalancer status is not in a state that allows updates");
+        }
+
+
         SessionPersistence dbSessionPersistence = dbLoadBalancer.getSessionPersistence();
         SessionPersistence sessionPersistenceToUpdate = dbSessionPersistence == null ? sessionPersistence : dbSessionPersistence;
         sessionPersistenceToUpdate.setLoadBalancer(dbLoadBalancer); // Needs to be set for hibernate
@@ -46,9 +54,20 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
 
     @Override
     @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class})
-    public void preDelete(Integer loadBalancerId) throws EntityNotFoundException {
+    public void preDelete(Integer loadBalancerId) throws EntityNotFoundException, ImmutableEntityException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getById(loadBalancerId);
+
+
         if (dbLoadBalancer.getSessionPersistence() == null) throw new EntityNotFoundException("Session persistence not found");
+
+
+        String status = dbLoadBalancer.getStatus();
+
+
+        if (! (status.equals("ACTIVE") || status.equals("QUEUED") || status.equals("PENDING_UPDATE"))) {
+            throw new ImmutableEntityException("LoadBalancer status is not in a state that allows updates");
+        }
+
     }
 
     @Override

@@ -3,7 +3,7 @@ INSERT INTO `adapter_cluster` (cluster_ipv6_cidr, description, name, password, u
 UNLOCK TABLES;
 
 LOCK TABLES `adapter_host` WRITE;
-INSERT INTO `adapter_host` (endpoint, endpoint_active, host_status, name, password, username, cluster_id) VALUES ('http://10.70.177.9:4301/lbservice/v1',1,'ACTIVE_TARGET', 'Helios-1','626a47d059552219760a2d38a130cd80', 'user1', 1);
+INSERT INTO `adapter_host` (endpoint, endpoint_active, host_status, name, password, username, cluster_id) VALUES ('http://localhost:4301/lbservice/v1',1,'ACTIVE_TARGET', 'Helios-1','626a47d059552219760a2d38a130cd80', 'user1', 1);
 UNLOCK TABLES;
 
 LOCK TABLES `adapter_virtual_ipv4` WRITE;

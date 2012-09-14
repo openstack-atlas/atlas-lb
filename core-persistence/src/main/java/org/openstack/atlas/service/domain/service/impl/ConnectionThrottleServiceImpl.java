@@ -30,6 +30,15 @@ public class ConnectionThrottleServiceImpl implements ConnectionThrottleService 
     @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class, ImmutableEntityException.class, UnprocessableEntityException.class})
     public ConnectionThrottle update(Integer loadBalancerId, ConnectionThrottle connectionThrottle) throws PersistenceServiceException {
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getById(loadBalancerId);
+
+        String status = dbLoadBalancer.getStatus();
+
+
+        if (! (status.equals("ACTIVE") || status.equals("QUEUED") || status.equals("PENDING_UPDATE"))) {
+            throw new ImmutableEntityException("LoadBalancer status is not in a state that allows updates");
+        }
+
+
         ConnectionThrottle dbConnectionThrottle = dbLoadBalancer.getConnectionThrottle();
 
         if(dbConnectionThrottle == null) {
@@ -47,10 +56,20 @@ public class ConnectionThrottleServiceImpl implements ConnectionThrottleService 
 
     @Override
     @Transactional(value="core_transactionManager", rollbackFor = {EntityNotFoundException.class})
-    public void preDelete(Integer loadBalancerId) throws EntityNotFoundException {
+    public void preDelete(Integer loadBalancerId) throws EntityNotFoundException, ImmutableEntityException {
+
         LoadBalancer dbLoadBalancer = loadBalancerRepository.getById(loadBalancerId);
+
         if (dbLoadBalancer.getConnectionThrottle() == null)
             throw new EntityNotFoundException("Connection throttle not found");
+
+
+        String status = dbLoadBalancer.getStatus();
+
+
+        if (! (status.equals("ACTIVE") || status.equals("QUEUED") || status.equals("PENDING_UPDATE"))) {
+            throw new ImmutableEntityException("LoadBalancer status is not in a state that allows updates");
+        }
     }
 
     @Override
