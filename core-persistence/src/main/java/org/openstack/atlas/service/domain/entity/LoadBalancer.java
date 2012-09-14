@@ -153,7 +153,6 @@ public class LoadBalancer extends Entity implements Serializable {
     }
 
     public void setAlgorithm(String algorithm) {
-        if (!AtlasTypeHelper.isValidAlgorithm(algorithm)) throw new RuntimeException("Algorithm not supported.");
         this.algorithm = algorithm;
     }
 
@@ -162,7 +161,6 @@ public class LoadBalancer extends Entity implements Serializable {
     }
 
     public void setProtocol(String protocol) {
-        if (!AtlasTypeHelper.isValidProtocol(protocol)) throw new RuntimeException("Protocol not supported.");
         this.protocol = protocol;
     }
 
