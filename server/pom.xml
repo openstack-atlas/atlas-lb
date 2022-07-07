@@ -13,7 +13,7 @@
 
     <properties>
         <bundle.name>atlas-${project.version}</bundle.name>
-        <jetty.version>7.2.2.v20101205</jetty.version>
+        <jetty.version>10.0.10</jetty.version>
     </properties>
 
     <dependencies>
